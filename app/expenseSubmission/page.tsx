@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useRouter } from "next/navigation"
 import { z } from "zod"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
@@ -59,6 +60,7 @@ const formSchema = z.object({
 });
 
 const SubmitExpense = () => {
+  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currencies, setCurrencies] = useState<CurrencyOption[]>([])
   const [isLoadingCurrencies, setIsLoadingCurrencies] = useState(true)
@@ -162,8 +164,10 @@ const SubmitExpense = () => {
         currency: ""
       });
       
-      // Clear success message after 5 seconds
-      setTimeout(() => setSubmitSuccess(false), 5000);
+      // Show success message briefly, then redirect to dashboard
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 2000); // Redirect after 2 seconds
       
     } catch (error: unknown) {
       console.error("Failed to submit expense:", error);
@@ -186,7 +190,9 @@ const SubmitExpense = () => {
         <CardContent>
           {submitSuccess && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-green-800">Expense submitted successfully! Awaiting approval.</p>
+              <p className="text-green-800">
+                Expense submitted successfully! Redirecting to dashboard...
+              </p>
             </div>
           )}
           
@@ -351,13 +357,11 @@ const SubmitExpense = () => {
                   variant="outline" 
                   type="button" 
                   onClick={() => {
-                    form.reset();
-                    setSubmitError(null);
-                    setSubmitSuccess(false);
+                    router.push('/dashboard');
                   }}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  Back to Dashboard
                 </Button>
                 <Button type="submit" disabled={isSubmitting || isLoadingCurrencies}>
                   {isSubmitting ? "Submitting..." : "Submit Expense"}
