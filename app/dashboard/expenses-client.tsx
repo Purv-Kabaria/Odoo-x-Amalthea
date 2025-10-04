@@ -17,6 +17,19 @@ interface Expense {
   description: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  convertedAmount?: number;
+  convertedCurrency?: string;
+}
+
+interface ExchangeRates {
+  rates: Record<string, number>;
+  base: string;
+  date: string;
 }
 
 interface ExpensesClientProps {
@@ -24,12 +37,51 @@ interface ExpensesClientProps {
 }
 
 export function ExpensesClient({ userId }: ExpensesClientProps) {
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(
+    null
+  );
+
+  const fetchExchangeRates = useCallback(async () => {
+    try {
+      const response = await fetch(
+        "https://api.exchangerate-api.com/v4/latest/USD"
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setExchangeRates(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch exchange rates:", error);
+    }
+  }, []);
+
+  const convertToINR = useCallback(
+    (amount: number, fromCurrency: string): number => {
+      if (!exchangeRates || fromCurrency === "INR") {
+        return amount;
+      }
+
+      const toUSD = amount / exchangeRates.rates[fromCurrency];
+      const toINR = toUSD * exchangeRates.rates["INR"];
+
+      return Math.round(toINR * 100) / 100;
+    },
+    [exchangeRates]
+  );
 
   useEffect(() => {
-    fetchExpenses();
-  }, []);
+    fetchExchangeRates();
+  }, [fetchExchangeRates]);
+
+  useEffect(() => {
+    if (exchangeRates) {
+      fetchExpenses();
+    }
+  }, [userId, exchangeRates]);
 
   const fetchExpenses = useCallback(async () => {
     try {
@@ -51,13 +103,13 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "approved":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-500/10 text-green-600 border-green-500/20";
       case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-destructive/10 text-destructive border-destructive/20";
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-amber-500/10 text-amber-600 border-amber-500/20";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -72,8 +124,8 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       {/* Expense Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <DollarSign className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <DollarSign className="h-4 w-4 text-primary" />
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Total Expenses</p>
@@ -84,22 +136,30 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Receipt className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Receipt className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Total Reports</p>
-            <p className="text-lg font-bold text-gray-900">{expenses.length}</p>
+            <p className="text-sm font-medium text-muted-foreground font-sans">
+              Total Reports
+            </p>
+            <p className="text-lg font-bold text-foreground font-sans">
+              {expenses.length}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <TrendingUp className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Pending</p>
-            <p className="text-lg font-bold text-gray-900">{pendingExpenses}</p>
+            <p className="text-sm font-medium text-muted-foreground font-sans">
+              Pending
+            </p>
+            <p className="text-lg font-bold text-foreground font-sans">
+              {pendingExpenses}
+            </p>
           </div>
         </div>
       </div>
@@ -107,8 +167,13 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       {/* Recent Expenses */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-gray-900">Recent Expenses</h4>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <h4 className="font-medium text-foreground font-sans">
+            Recent Expenses
+          </h4>
+          <Button
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-sans"
+          >
             <Plus className="h-4 w-4 mr-1" />
             Add Expense
           </Button>
@@ -119,7 +184,9 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
             Loading expenses...
           </div>
         ) : expenses.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">No expenses found</div>
+          <div className="p-4 text-center text-muted-foreground font-sans">
+            No expenses found
+          </div>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {expenses.slice(0, 5).map((expense) => (
@@ -149,6 +216,18 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {expenses.length > 5 && (
+          <div className="text-center pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/expenses")} // You can create an expenses list page later
+            >
+              View All Expenses ({expenses.length})
+            </Button>
           </div>
         )}
       </div>

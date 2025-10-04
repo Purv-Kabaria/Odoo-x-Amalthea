@@ -80,33 +80,30 @@ export const footerConfig: FooterConfig = {
       title: "Product",
       links: [
         { href: "/#features", label: "Features" },
-        { href: "/pricing", label: "Pricing" },
-        { href: "/demo", label: "Book a Demo" },
+        { href: "/#cta", label: "Get Started" },
+        { href: "/#testimonials", label: "Reviews" },
       ],
     },
     {
       title: "Company",
       links: [
-        { href: "/about", label: "About Us" },
-        { href: "/contact", label: "Contact" },
-        { href: "/careers", label: "Careers" },
+        { href: "/dashboard", label: "Dashboard" },
+        { href: "/admin/dashboard", label: "Admin Dashboard" },
       ],
     },
   ],
   contactInfo: {
     address: {
-      line1: "123 Finance Ave",
-      line2: "Business City, 12345",
+      line1: "SVNIT",
+      line2: "Surat, Gujarat",
       line3: "",
     },
     email: "contact@expensio.com",
-    phone: "+1 (555) 123-4567",
+    phone: "+91 12345 67890",
   },
   legal: {
-    copyrightText: "Expensio. All rights reserved.",
+    copyrightText: "SVNIT. All rights reserved.",
     links: [
-      { href: "/privacy", label: "Privacy Policy" },
-      { href: "/terms", label: "Terms of Service" },
     ],
   },
 };

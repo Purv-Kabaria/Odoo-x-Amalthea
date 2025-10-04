@@ -23,14 +23,14 @@ const expenseSchema = new Schema<IExpense>({
     enum: ['travel', 'meal', 'supplies', 'software', 'training', 'other'],
     required: true 
   },
-  amount: { type: Number, required: true },
+  amount: { type: Number, required: true, min: 0 },
   currency: { 
     code: { type: String, required: true },
     name: { type: String, required: true },
     symbol: { type: String }
   },
   date: { type: Date, required: true },
-  description: { type: String, required: true },
+  description: { type: String, required: true, minlength: 5, maxlength: 500 },
   receiptFile: { type: String },
   userId: { 
     type: mongoose.Schema.Types.ObjectId,
@@ -45,5 +45,9 @@ const expenseSchema = new Schema<IExpense>({
   submittedAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
+// Add indexes for better query performance
+expenseSchema.index({ userId: 1, submittedAt: -1 });
+expenseSchema.index({ status: 1 });
 
 export const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);

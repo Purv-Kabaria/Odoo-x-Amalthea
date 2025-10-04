@@ -64,7 +64,7 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name Field */}
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="name" className="text-sm font-medium text-foreground font-sans">
             Full Name
           </Label>
           {isEditing ? (
@@ -74,23 +74,23 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
               value={formData.name}
               onChange={(e) => setFormData({ name: e.target.value })}
               placeholder="Enter your full name"
-              className="border-blue-200 focus:border-blue-500"
+              className="border-border focus:border-primary focus:ring-primary/20"
             />
           ) : (
-            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-gray-900 font-medium">{user.name}</p>
+            <div className="p-3 bg-muted rounded-lg border border-border">
+              <p className="text-foreground font-medium font-sans">{user.name}</p>
             </div>
           )}
         </div>
 
         {/* Email Field */}
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="email" className="text-sm font-medium text-foreground font-sans">
             Email Address
           </Label>
-          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <p className="text-gray-900 font-medium">{user.email}</p>
-            <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+          <div className="p-3 bg-muted rounded-lg border border-border">
+            <p className="text-foreground font-medium font-sans">{user.email}</p>
+            <p className="text-xs text-muted-foreground mt-1 font-sans">Email cannot be changed</p>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
               variant="outline"
               onClick={handleCancel}
               disabled={isPending}
-              className="border-gray-300 text-gray-700 hover:bg-gray-50"
+              className="border-border text-foreground hover:bg-muted font-sans"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
@@ -113,11 +113,11 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
               type="button"
               onClick={handleSave}
               disabled={isPending}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-sans"
             >
               {isPending ? (
                 <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
                   Saving...
                 </div>
               ) : (
@@ -132,7 +132,7 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
           <Button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-sans"
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit Profile
