@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Users, AlertCircle, ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -67,10 +68,10 @@ export default async function AdminApprovalPage() {
               </div>
             </div>
             <Link href="/admin/dashboard">
-              <button className="flex items-center space-x-2 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors text-foreground font-sans">
+              <Button variant='outline' className="flex items-center space-x-2 border-border text-foreground hover:bg-muted font-sans">
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
-              </button>
+              </Button>
             </Link>
           </div>
         </div>

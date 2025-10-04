@@ -3,6 +3,7 @@ import { verifyToken } from "@/lib/jwt";
 import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { updateUserAction, logoutAction, deleteUserAction } from "@/app/actions/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,13 +57,13 @@ export default async function DashboardPage() {
         <div className="bg-card rounded-xl shadow-lg p-6 border border-border">
           {/* Back Button */}
           <div className="mb-4">
-            <a 
+            <Link 
               href="/"
               className="inline-flex items-center space-x-2 text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 group"
             >
               <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
               <span>Back to Home</span>
-            </a>
+            </Link>
           </div>
           
           <div className="flex items-center justify-between">
@@ -110,21 +111,34 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-         {/* Expenses Overview Card */}
-         <Card className="bg-card shadow-lg border border-border">
-           <CardHeader>
-             <CardTitle className="text-xl font-bold text-foreground flex items-center space-x-2 font-sans">
-               <Receipt className="h-5 w-5" />
-               <span>Expenses Overview</span>
-             </CardTitle>
-             <CardDescription className="text-foreground/70 font-sans">
-               Track and manage your expense reports
-             </CardDescription>
-           </CardHeader>
-           <CardContent>
-             <ExpensesClient userId={String(user._id)} />
-           </CardContent>
-         </Card>
+         {/* Expenses Overview Card - Only for non-managers */}
+         {user.role !== 'manager' && (
+           <Card className="bg-card shadow-lg border border-border">
+             <CardHeader>
+               <div className="flex items-center justify-between">
+                 <div>
+                   <CardTitle className="text-xl font-bold text-foreground flex items-center space-x-2 font-sans">
+                     <Receipt className="h-5 w-5" />
+                     <span>Expenses Overview</span>
+                   </CardTitle>
+                   <CardDescription className="text-foreground/70 font-sans">
+                     Track and manage your expense reports
+                   </CardDescription>
+                 </div>
+                 <a 
+                   href="/expenseSubmission"
+                   className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-sans text-sm font-medium"
+                 >
+                   <Receipt className="h-4 w-4 mr-2" />
+                   Add Expense
+                 </a>
+               </div>
+             </CardHeader>
+             <CardContent>
+               <ExpensesClient userId={String(user._id)} />
+             </CardContent>
+           </Card>
+         )}
 
         {/* Account Information */}
         <Card className="bg-card shadow-lg border border-border">

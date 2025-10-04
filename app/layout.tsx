@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4, JetBrains_Mono, Kalam } from "next/font/google";
+import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Expensio",
   description: "Expensio",
+  icons: {
+    icon: "/images/logo-blue.svg",
+  },
 };
 
 const inter = Inter({
@@ -25,13 +28,6 @@ const jetBrainsMono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
-const kalam = Kalam({
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
-  variable: "--font-kalam",
-});
-
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -39,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`antialiased ${inter.variable} ${sourceSerif4.variable} ${jetBrainsMono.variable} ${kalam.variable}`}>
+      <body className={`antialiased ${inter.variable} ${sourceSerif4.variable} ${jetBrainsMono.variable}`}>
         {children}
         <Toaster />
       </body>

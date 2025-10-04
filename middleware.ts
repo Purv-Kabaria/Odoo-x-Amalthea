@@ -2,44 +2,28 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET env var is required for middleware");
-}
-
-async function verifyTokenEdge(token: string) {
-  const secret = new TextEncoder().encode(JWT_SECRET);
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as any;
-  } catch (e) {
-    return null;
-  }
-}
-
 const PUBLIC_PATHS = [
-  "/",
   "/favicon.ico",
   "/_next",
   "/api/public",
-  "/(auth)",
-  "/(auth)/login",
-  "/(auth)/signup",
+  "/login",
+  "/signup",
 ];
 
 function isPublicPath(pathname: string) {
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p)))
-    return true;
-  return false;
+  return PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p));
 }
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   if (
+    pathname === "/" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
-    pathname.startsWith("/api/public")
+    pathname.startsWith("/api/public") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/favicon.ico")
   ) {
     return NextResponse.next();
   }
@@ -54,9 +38,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const payload = await verifyTokenEdge(token);
-
-  if (!payload) {
+  let payload;
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const { payload: tokenPayload } = await jwtVerify(token, secret);
+    payload = tokenPayload as { id: string; role: string; email: string; organization: string };
+  } catch (error) {
     const loginUrl = new URL("/login", req.url);
     return NextResponse.redirect(loginUrl);
   }
@@ -68,8 +55,17 @@ export async function middleware(req: NextRequest) {
   }
 
   if (pathname.startsWith("/manager")) {
-    if (payload.role !== "manager") {
+    if (payload.role !== "manager" && payload.role !== "admin") {
       return new NextResponse("Forbidden", { status: 403 });
+    }
+  }
+
+  if (pathname === "/expenseSubmission" || 
+      pathname.startsWith("/expenseSubmission/") ||
+      pathname.includes("/expenseSubmission")) {
+    if (payload.role === "manager") {
+      const managerDashboardUrl = new URL("/manager/dashboard", req.url);
+      return NextResponse.redirect(managerDashboardUrl);
     }
   }
 
@@ -82,5 +78,10 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|static|favicon.ico|api/public).*)"],
+  matcher: [
+    "/admin/:path*",
+    "/manager/:path*",
+    "/expenseSubmission",
+    "/expenseSubmission/:path*",
+  ],
 };

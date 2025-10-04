@@ -21,6 +21,16 @@ export async function POST(
       );
     }
 
+    // Get request body for manager comment
+    let managerComment = "";
+    try {
+      const body = await request.json();
+      managerComment = body.comment || "";
+    } catch {
+      // If no body or invalid JSON, continue without comment
+      console.log("No comment provided or invalid JSON");
+    }
+
     // Get manager information
     const manager = await User.findById(managerId).select("name email organization role");
     if (!manager) {
@@ -55,10 +65,14 @@ export async function POST(
       expenseId,
       {
         status: "rejected",
+        managerComment: managerComment.trim() || undefined,
+        rejectedBy: managerId,
+        rejectedAt: new Date(),
         updatedAt: new Date(),
       },
       { new: true }
-    ).populate("userId", "name email organization");
+    ).populate("userId", "name email organization")
+     .populate("rejectedBy", "name email");
 
     return NextResponse.json(
       {

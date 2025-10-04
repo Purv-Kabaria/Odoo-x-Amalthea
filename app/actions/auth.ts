@@ -3,6 +3,7 @@
 import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
 import Company from "@/models/Company";
+import ApprovalRule from "@/models/ApprovalRules";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
@@ -13,6 +14,7 @@ type SignupInput = {
   password: string;
   organization: string;
   role?: "admin" | "employee" | "manager";
+  companyCurrency?: string;
 };
 
 type LoginInput = {
@@ -23,7 +25,7 @@ type LoginInput = {
 export async function signUpAction(data: SignupInput) {
   await connectToDatabase();
 
-  const { name, email, password, organization, role } = data;
+  const { name, email, password, organization, role, companyCurrency } = data;
   if (!name || !email || !password || !organization) {
     throw new Error("Missing required fields");
   }
@@ -62,9 +64,15 @@ export async function signUpAction(data: SignupInput) {
 
   // If this is the first user for this organization, create a company record
   if (isFirstUser) {
-    await Company.create({
+    const newCompany = await Company.create({
       name: organization,
-      adminId: String(user._id)
+      adminId: String(user._id),
+      defaultCurrency: companyCurrency || 'EUR'
+    });
+    console.log('Created new company:', {
+      name: newCompany.name,
+      adminId: newCompany.adminId,
+      defaultCurrency: newCompany.defaultCurrency
     });
   }
 
@@ -87,6 +95,49 @@ export async function signUpAction(data: SignupInput) {
     role: user.role,
     organization: user.organization,
   };
+}
+
+export async function getCompanyDefaultCurrency(organization: string): Promise<string> {
+  await connectToDatabase();
+  
+  const company = await Company.findOne({ name: organization });
+  if (!company) {
+    console.log(`Company not found: ${organization}`);
+    return 'EUR';
+  }
+  
+  // If company exists but doesn't have defaultCurrency, update it
+  if (!company.defaultCurrency) {
+    console.log(`Updating company ${organization} with default currency EUR`);
+    await Company.findByIdAndUpdate(company._id, { defaultCurrency: 'EUR' });
+    return 'EUR';
+  }
+  
+  return company.defaultCurrency;
+}
+
+export async function getCompanyInfo(organization: string): Promise<{ name: string; defaultCurrency: string; adminId: string } | null> {
+  await connectToDatabase();
+  
+  try {
+    const company = await Company.findOne({ name: organization });
+    if (!company) return null;
+    
+    // If company exists but doesn't have defaultCurrency, update it
+    if (!company.defaultCurrency) {
+      console.log(`Updating company ${organization} with default currency EUR`);
+      await Company.findByIdAndUpdate(company._id, { defaultCurrency: 'EUR' });
+    }
+    
+    return {
+      name: company.name,
+      defaultCurrency: company.defaultCurrency || 'EUR',
+      adminId: company.adminId
+    };
+  } catch (error) {
+    console.error("Failed to get company info:", error);
+    return null;
+  }
 }
 
 export async function loginAction(data: LoginInput) {
@@ -318,6 +369,48 @@ export async function updateUserRoleAction(targetUserId: string, newRole: "admin
         name: user.name,
         email: user.email,
         role: user.role
+      }
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function deleteApprovalRuleAction(ruleId: string) {
+  await connectToDatabase();
+  
+  // Get current user to verify admin permissions
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+  
+  if (!token) throw new Error("Not authenticated");
+  
+  try {
+    const { verifyToken } = await import("@/lib/jwt");
+    const currentUser = verifyToken(token);
+    
+    // Check if current user is admin
+    if (currentUser.role !== "admin" && !currentUser.email?.endsWith("@admin")) {
+      throw new Error("Unauthorized: Admin access required");
+    }
+    
+    // Get the rule to check organization
+    const rule = await ApprovalRule.findById(ruleId);
+    if (!rule) throw new Error("Approval rule not found");
+    
+    // Admin can only delete rules from their organization
+    if (rule.organization !== currentUser.organization) {
+      throw new Error("Unauthorized: Can only delete rules from your organization");
+    }
+    
+    const deletedRule = await ApprovalRule.findByIdAndDelete(ruleId);
+    if (!deletedRule) throw new Error("Approval rule not found");
+    
+    return { 
+      success: true, 
+      deletedRule: {
+        id: String(deletedRule._id),
+        ruleName: deletedRule.ruleName || "Unnamed Rule"
       }
     };
   } catch (error) {

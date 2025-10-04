@@ -319,6 +319,15 @@ export default function AdminApprovalRuleForm({
 
         if (!editMode) {
           reset();
+          // Redirect to approvals page after successful creation
+          setTimeout(() => {
+            window.location.href = "/admin/approvals";
+          }, 1500);
+        } else {
+          // Redirect to approvals page after successful update
+          setTimeout(() => {
+            window.location.href = "/admin/approvals";
+          }, 1500);
         }
       } else {
         const errorData = await response.json();
@@ -501,6 +510,7 @@ export default function AdminApprovalRuleForm({
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="isManagerApprover"
+                      checked={watch("isManagerApprover")}
                       onCheckedChange={(checked) =>
                         setValue("isManagerApprover", !!checked)
                       }
@@ -513,6 +523,7 @@ export default function AdminApprovalRuleForm({
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="approverSequence"
+                      checked={watch("approverSequence")}
                       onCheckedChange={(checked) =>
                         setValue("approverSequence", !!checked)
                       }
@@ -544,6 +555,7 @@ export default function AdminApprovalRuleForm({
                 <div className="space-y-2">
                   <Label htmlFor="appliesToUser">Applies To User</Label>
                   <Select
+                    value={watch("appliesToUser")}
                     onValueChange={(value) => setValue("appliesToUser", value)}
                   >
                     <SelectTrigger>
@@ -569,7 +581,10 @@ export default function AdminApprovalRuleForm({
 
                 <div className="space-y-2">
                   <Label htmlFor="manager">Manager</Label>
-                  <Select onValueChange={(value) => setValue("manager", value)}>
+                  <Select 
+                    value={watch("manager")}
+                    onValueChange={(value) => setValue("manager", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select manager" />
                     </SelectTrigger>
@@ -670,6 +685,7 @@ export default function AdminApprovalRuleForm({
                                 Approver *
                               </Label>
                               <Select
+                                value={watch(`approvers.${index}.user`)}
                                 onValueChange={(value) =>
                                   setValue(`approvers.${index}.user`, value)
                                 }
@@ -717,6 +733,7 @@ export default function AdminApprovalRuleForm({
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id={`approvers.${index}.required`}
+                                checked={watch(`approvers.${index}.required`)}
                                 onCheckedChange={(checked) =>
                                   setValue(
                                     `approvers.${index}.required`,
@@ -732,6 +749,7 @@ export default function AdminApprovalRuleForm({
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id={`approvers.${index}.autoApprove`}
+                                checked={watch(`approvers.${index}.autoApprove`)}
                                 onCheckedChange={(checked) =>
                                   setValue(
                                     `approvers.${index}.autoApprove`,

@@ -1,105 +1,106 @@
+version: '3.8'
+
 services:
-  # MongoDB Database
   mongodb:
     image: mongo:7.0
-    container_name: amalthea-mongodb-prod
+    container_name: expensio-mongodb-prod
     restart: unless-stopped
+    ports:
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: amalthea
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: expensio
     volumes:
-      - mongodb_data_prod:/data/db
+      - mongodb_data:/data/db
+      - ./scripts:/docker-entrypoint-initdb.d
     networks:
-      - amalthea-network-prod
-    # Remove port exposure for production security
-    # ports:
-    #   - "27017:27017"
+      - expensio-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    # Security: Run as non-root user
-    user: "999:999"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
 
-  # Next.js Application
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: amalthea-app-prod
+    container_name: expensio-app-prod
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       - NODE_ENV=production
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-7d}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-    ports:
-      - "3000:3000"
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
     depends_on:
       mongodb:
         condition: service_healthy
     networks:
-      - amalthea-network-prod
-    volumes:
-      - ./uploads:/app/uploads
+      - expensio-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    # Resource limits for production
     deploy:
       resources:
         limits:
           memory: 1G
-          cpus: '0.5'
         reservations:
           memory: 512M
-          cpus: '0.25'
 
-  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: amalthea-nginx-prod
+    container_name: expensio-nginx-prod
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - ./uploads:/var/www/uploads:ro
       - nginx_cache:/var/cache/nginx
+      - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       app:
         condition: service_healthy
     networks:
-      - amalthea-network-prod
+      - expensio-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    # Resource limits for production
+      start_period: 40s
     deploy:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
         reservations:
           memory: 128M
-          cpus: '0.1'
 
 volumes:
-  mongodb_data_prod:
+  mongodb_data:
     driver: local
   nginx_cache:
     driver: local
 
 networks:
-  amalthea-network-prod:
+  expensio-network:
     driver: bridge

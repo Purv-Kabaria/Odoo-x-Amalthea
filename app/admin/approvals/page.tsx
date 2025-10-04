@@ -1,4 +1,4 @@
-import { getCurrentUserAction } from "@/app/actions/auth";
+import { getCurrentUserAction, deleteApprovalRuleAction } from "@/app/actions/auth";
 import {
   Card,
   CardContent,
@@ -8,6 +8,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   CheckSquare,
   AlertCircle,
@@ -80,7 +90,7 @@ export default async function AdminApprovalsPage() {
   let approvalRules: any[] = [];
   try {
     await connectToDatabase();
-    approvalRules = await ApprovalRule.find()
+    approvalRules = await ApprovalRule.find({ organization: currentUser.organization })
       .populate("appliesToUser", "name email")
       .populate("manager", "name email")
       .populate("approvers.user", "name email")
@@ -210,12 +220,6 @@ export default async function AdminApprovalsPage() {
                 <p className="text-muted-foreground mb-6 font-sans">
                   Get started by creating your first approval rule
                 </p>
-                <Link href="/admin/admin-approval">
-                  <Button className="flex items-center space-x-2 bg-primary hover:bg-primary/90 text-primary-foreground font-sans">
-                    <Plus className="h-4 w-4" />
-                    <span>Create First Rule</span>
-                  </Button>
-                </Link>
               </CardContent>
             </Card>
           ) : (
@@ -354,14 +358,48 @@ export default async function AdminApprovalsPage() {
                           Edit
                         </Button>
                       </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive/80 border-destructive/20 hover:bg-destructive/10 font-sans"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive/80 border-destructive/20 hover:bg-destructive/10 font-sans"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-destructive font-sans">Delete Approval Rule</AlertDialogTitle>
+                            <AlertDialogDescription className="text-muted-foreground font-sans">
+                              Are you absolutely sure you want to delete the approval rule &quot;{rule.ruleName || "Unnamed Rule"}&quot;? 
+                              This action cannot be undone and will permanently remove the rule from your organization.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="font-sans">Cancel</AlertDialogCancel>
+                            <form action={async () => {
+                              "use server";
+                              try {
+                                await deleteApprovalRuleAction(String(rule._id));
+                                redirect("/admin/approvals");
+                              } catch (error) {
+                                console.error("Failed to delete approval rule:", error);
+                                throw error;
+                              }
+                            }}>
+                              <Button 
+                                type="submit" 
+                                variant="destructive"
+                                className="font-sans"
+                              >
+                                Yes, Delete Rule
+                              </Button>
+                            </form>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </CardContent>
                 </Card>

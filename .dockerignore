@@ -9,11 +9,9 @@ pnpm-debug.log*
 .next/
 out/
 build/
-
-# Production
 dist/
 
-# Environment variables
+# Environment files
 .env
 .env.local
 .env.development.local
@@ -46,6 +44,12 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
 # Optional REPL history
 .node_repl_history
 
@@ -64,10 +68,7 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-
-# Gatsby files
-.cache/
-public
+dist
 
 # Storybook build outputs
 .out
@@ -100,29 +101,30 @@ README.md
 
 # Docker
 Dockerfile*
-docker-compose*
+docker-compose*.yml
 .dockerignore
 
-# Documentation
-docs/
-*.md
+# Scripts
+scripts/
 
 # Test files
 __tests__/
 *.test.js
 *.test.ts
-*.test.tsx
 *.spec.js
 *.spec.ts
-*.spec.tsx
 
-# Linting
-.eslintrc*
-.prettierrc*
+# Documentation
+docs/
+*.md
 
-# TypeScript
-*.tsbuildinfo
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
 
-# Misc
-.editorconfig
-.gitattributes
+# Other
+.nyc_output
+coverage/
+.nyc_output/

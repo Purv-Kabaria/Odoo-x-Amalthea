@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Odoo x Amalthea Deployment Script
+# Expensio Deployment Script
 # This script handles deployment for both development and production environments
 
 set -e
@@ -11,12 +11,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
-
-# Default values
-ENVIRONMENT="development"
-CLEAN_BUILD=false
-SKIP_TESTS=false
-HELP=false
 
 # Function to print colored output
 print_status() {
@@ -35,178 +29,187 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to show help
-show_help() {
-    echo "Odoo x Amalthea Deployment Script"
-    echo ""
-    echo "Usage: $0 [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  -e, --environment ENV    Set environment (development|production) [default: development]"
-    echo "  -c, --clean             Clean build (remove existing containers and volumes)"
-    echo "  -s, --skip-tests        Skip running tests"
-    echo "  -h, --help              Show this help message"
-    echo ""
-    echo "Examples:"
-    echo "  $0                                    # Deploy development environment"
-    echo "  $0 -e production                      # Deploy production environment"
-    echo "  $0 -e production -c                  # Clean build production environment"
-    echo "  $0 -e development -s                 # Deploy development without tests"
+# Function to check if command exists
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
 }
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        -e|--environment)
-            ENVIRONMENT="$2"
-            shift 2
-            ;;
-        -c|--clean)
-            CLEAN_BUILD=true
-            shift
-            ;;
-        -s|--skip-tests)
-            SKIP_TESTS=true
-            shift
-            ;;
-        -h|--help)
-            HELP=true
-            shift
-            ;;
-        *)
-            print_error "Unknown option: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-done
-
-# Show help if requested
-if [ "$HELP" = true ]; then
-    show_help
-    exit 0
-fi
-
-# Validate environment
-if [ "$ENVIRONMENT" != "development" ] && [ "$ENVIRONMENT" != "production" ]; then
-    print_error "Invalid environment: $ENVIRONMENT. Must be 'development' or 'production'"
-    exit 1
-fi
-
-print_status "Starting deployment for $ENVIRONMENT environment..."
-
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    print_error "Docker is not running. Please start Docker and try again."
-    exit 1
-fi
-
-# Check if Docker Compose is available
-if ! command -v docker-compose &> /dev/null; then
-    print_error "Docker Compose is not installed. Please install Docker Compose and try again."
-    exit 1
-fi
-
-# Check if .env file exists
-if [ ! -f ".env" ]; then
-    print_warning ".env file not found. Creating from env.example..."
-    if [ -f "env.example" ]; then
-        cp env.example .env
-        print_warning "Please edit .env file with your configuration before continuing."
-        read -p "Press Enter to continue after editing .env file..."
-    else
-        print_error "env.example file not found. Please create .env file manually."
+# Function to check prerequisites
+check_prerequisites() {
+    print_status "Checking prerequisites..."
+    
+    if ! command_exists docker; then
+        print_error "Docker is not installed. Please install Docker first."
         exit 1
     fi
-fi
-
-# Clean build if requested
-if [ "$CLEAN_BUILD" = true ]; then
-    print_status "Cleaning existing containers and volumes..."
     
-    if [ "$ENVIRONMENT" = "production" ]; then
-        docker-compose -f docker-compose.prod.yml down -v --remove-orphans
-    else
-        docker-compose down -v --remove-orphans
+    if ! command_exists docker-compose; then
+        print_error "Docker Compose is not installed. Please install Docker Compose first."
+        exit 1
     fi
     
-    print_success "Clean completed"
-fi
+    print_success "All prerequisites are met!"
+}
 
-# Run tests if not skipped
-if [ "$SKIP_TESTS" = false ]; then
-    print_status "Running tests..."
+# Function to create necessary directories
+create_directories() {
+    print_status "Creating necessary directories..."
     
-    # Check if pnpm is available
-    if command -v pnpm &> /dev/null; then
-        pnpm install
-        pnpm run lint
-        print_success "Tests completed successfully"
-    else
-        print_warning "pnpm not found. Skipping tests. Please run tests manually."
+    mkdir -p uploads
+    mkdir -p logs
+    mkdir -p ssl
+    
+    print_success "Directories created successfully!"
+}
+
+# Function to check environment file
+check_env_file() {
+    if [ ! -f .env ]; then
+        print_warning ".env file not found. Creating from env.example..."
+        if [ -f env.example ]; then
+            cp env.example .env
+            print_warning "Please edit .env file with your configuration before continuing."
+            print_warning "Press Enter to continue after editing .env file..."
+            read -r
+        else
+            print_error "env.example file not found. Please create .env file manually."
+            exit 1
+        fi
     fi
-fi
+}
 
-# Build and start services
-print_status "Building and starting services..."
-
-if [ "$ENVIRONMENT" = "production" ]; then
-    print_status "Deploying production environment..."
-    docker-compose -f docker-compose.prod.yml up -d --build
-    
-    # Wait for services to be healthy
-    print_status "Waiting for services to be healthy..."
-    sleep 30
-    
-    # Check service health
-    if docker-compose -f docker-compose.prod.yml ps | grep -q "unhealthy"; then
-        print_warning "Some services are unhealthy. Check logs with: docker-compose -f docker-compose.prod.yml logs"
-    else
-        print_success "All services are healthy"
-    fi
-    
-    # Show service status
-    print_status "Service status:"
-    docker-compose -f docker-compose.prod.yml ps
-    
-    print_success "Production deployment completed!"
-    print_status "Application is available at: http://localhost"
-    print_status "Health check: http://localhost/health"
-    
-else
+# Function to deploy development environment
+deploy_dev() {
     print_status "Deploying development environment..."
+    
+    check_prerequisites
+    create_directories
+    check_env_file
+    
+    print_status "Starting development services..."
     docker-compose up -d --build
     
-    # Wait for services to be healthy
-    print_status "Waiting for services to be healthy..."
-    sleep 20
+    print_success "Development environment deployed successfully!"
+    print_status "Services available at:"
+    print_status "  - Application: http://localhost:3000"
+    print_status "  - MongoDB: mongodb://localhost:27017"
+    print_status "  - Mongo Express: http://localhost:8081"
+}
+
+# Function to deploy production environment
+deploy_prod() {
+    print_status "Deploying production environment..."
     
-    # Check service health
-    if docker-compose ps | grep -q "unhealthy"; then
-        print_warning "Some services are unhealthy. Check logs with: docker-compose logs"
-    else
-        print_success "All services are healthy"
+    check_prerequisites
+    create_directories
+    check_env_file
+    
+    # Check for required environment variables
+    if [ -z "$JWT_SECRET" ] || [ -z "$NEXTAUTH_SECRET" ] || [ -z "$MONGODB_URI" ]; then
+        print_error "Required environment variables not set in .env file:"
+        print_error "  - JWT_SECRET"
+        print_error "  - NEXTAUTH_SECRET"
+        print_error "  - MONGODB_URI"
+        exit 1
     fi
     
-    # Show service status
-    print_status "Service status:"
-    docker-compose ps
+    print_status "Starting production services..."
+    docker-compose -f docker-compose.prod.yml up -d --build
     
-    print_success "Development deployment completed!"
-    print_status "Application is available at: http://localhost:3000"
-    print_status "MongoDB Express is available at: http://localhost:8081"
-    print_status "Health check: http://localhost:3000/api/health"
-fi
+    print_success "Production environment deployed successfully!"
+    print_status "Services available at:"
+    print_status "  - Application: http://localhost:3000"
+    print_status "  - Nginx: http://localhost:80"
+    print_status "  - MongoDB: mongodb://localhost:27017"
+}
 
-# Show useful commands
-print_status "Useful commands:"
-echo "  View logs: docker-compose logs -f"
-echo "  Stop services: docker-compose down"
-echo "  Restart services: docker-compose restart"
-echo "  View service status: docker-compose ps"
+# Function to stop services
+stop_services() {
+    print_status "Stopping services..."
+    
+    if [ "$1" = "prod" ]; then
+        docker-compose -f docker-compose.prod.yml down
+    else
+        docker-compose down
+    fi
+    
+    print_success "Services stopped successfully!"
+}
 
-if [ "$ENVIRONMENT" = "production" ]; then
-    echo "  Scale application: docker-compose -f docker-compose.prod.yml up -d --scale app=3"
-fi
+# Function to view logs
+view_logs() {
+    if [ "$1" = "prod" ]; then
+        docker-compose -f docker-compose.prod.yml logs -f
+    else
+        docker-compose logs -f
+    fi
+}
 
-print_success "Deployment script completed successfully!"
+# Function to clean up
+cleanup() {
+    print_status "Cleaning up Docker resources..."
+    
+    docker-compose down -v --remove-orphans
+    docker-compose -f docker-compose.prod.yml down -v --remove-orphans
+    
+    print_status "Removing unused Docker resources..."
+    docker system prune -f
+    
+    print_success "Cleanup completed!"
+}
+
+# Function to show help
+show_help() {
+    echo "Expensio Deployment Script"
+    echo ""
+    echo "Usage: $0 [COMMAND]"
+    echo ""
+    echo "Commands:"
+    echo "  dev         Deploy development environment"
+    echo "  prod        Deploy production environment"
+    echo "  stop        Stop all services"
+    echo "  stop-prod   Stop production services"
+    echo "  logs        View logs (development)"
+    echo "  logs-prod   View logs (production)"
+    echo "  cleanup     Clean up Docker resources"
+    echo "  help        Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 dev      # Deploy development environment"
+    echo "  $0 prod     # Deploy production environment"
+    echo "  $0 stop     # Stop development services"
+    echo "  $0 logs     # View development logs"
+}
+
+# Main script logic
+case "${1:-help}" in
+    dev)
+        deploy_dev
+        ;;
+    prod)
+        deploy_prod
+        ;;
+    stop)
+        stop_services
+        ;;
+    stop-prod)
+        stop_services prod
+        ;;
+    logs)
+        view_logs
+        ;;
+    logs-prod)
+        view_logs prod
+        ;;
+    cleanup)
+        cleanup
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        print_error "Unknown command: $1"
+        show_help
+        exit 1
+        ;;
+esac

@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Receipt, Plus, DollarSign, TrendingUp } from "lucide-react";
+import { Receipt, DollarSign, TrendingUp } from "lucide-react";
 
 interface Expense {
   _id: string;
@@ -17,6 +16,17 @@ interface Expense {
   description: string;
   status: "pending" | "approved" | "rejected";
   submittedAt: string;
+  managerComment?: string;
+  approvedBy?: {
+    name: string;
+    email: string;
+  };
+  approvedAt?: string;
+  rejectedBy?: {
+    name: string;
+    email: string;
+  };
+  rejectedAt?: string;
 }
 
 interface ExpensesClientProps {
@@ -27,37 +37,48 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchExpenses();
-  }, []);
-
   const fetchExpenses = useCallback(async () => {
     try {
       const response = await fetch("/api/expenses");
-      const data = await response.json();
-      setExpenses(
-        data.filter(
-          (expense: Expense & { userId: { _id: string } }) =>
-            expense.userId._id === userId
-        )
-      );
+      const result = await response.json();
+      
+      // Handle the API response structure
+      const expenses = result.data || result;
+      
+      // Ensure we have an array before filtering
+      if (Array.isArray(expenses)) {
+        setExpenses(
+          expenses.filter(
+            (expense: Expense & { userId: { _id: string } }) =>
+              expense.userId && expense.userId._id === userId
+          )
+        );
+      } else {
+        console.error("Invalid expenses data format:", expenses);
+        setExpenses([]);
+      }
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
+      setExpenses([]);
     } finally {
       setLoading(false);
     }
   }, [userId]);
 
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
+
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "approved":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-500/10 text-green-600 border-green-500/20";
       case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-destructive/10 text-destructive border-destructive/20";
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-amber-500/10 text-amber-600 border-amber-500/20";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
@@ -72,34 +93,34 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       {/* Expense Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <DollarSign className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <DollarSign className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-sm font-medium text-muted-foreground font-sans">Total Expenses</p>
+            <p className="text-lg font-bold text-foreground font-sans">
               ${totalExpenses.toFixed(2)}
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Receipt className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Receipt className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Total Reports</p>
-            <p className="text-lg font-bold text-gray-900">{expenses.length}</p>
+            <p className="text-sm font-medium text-muted-foreground font-sans">Total Reports</p>
+            <p className="text-lg font-bold text-foreground font-sans">{expenses.length}</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <TrendingUp className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-600">Pending</p>
-            <p className="text-lg font-bold text-gray-900">{pendingExpenses}</p>
+            <p className="text-sm font-medium text-muted-foreground font-sans">Pending</p>
+            <p className="text-lg font-bold text-foreground font-sans">{pendingExpenses}</p>
           </div>
         </div>
       </div>
@@ -107,44 +128,74 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       {/* Recent Expenses */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-gray-900">Recent Expenses</h4>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Expense
-          </Button>
+          <h4 className="font-medium text-foreground font-sans">Recent Expenses</h4>
         </div>
 
         {loading ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-muted-foreground font-sans">
             Loading expenses...
           </div>
         ) : expenses.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">No expenses found</div>
+          <div className="p-4 text-center text-muted-foreground font-sans">No expenses found</div>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {expenses.slice(0, 5).map((expense) => (
               <div
                 key={expense._id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                className="flex items-start justify-between p-4 bg-muted rounded-lg border border-border hover:border-primary/20 transition-colors"
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <p className="font-medium text-gray-900 capitalize">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <p className="font-medium text-foreground capitalize font-sans">
                       {expense.expenseType}
                     </p>
                     <Badge className={getStatusBadgeColor(expense.status)}>
                       {expense.status}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-600">{expense.description}</p>
-                  <p className="text-xs text-gray-500">
-                    {new Date(expense.date).toLocaleDateString()}
+                  <p className="text-sm text-muted-foreground font-sans leading-relaxed mb-2">
+                    {expense.description}
                   </p>
+                  {expense.managerComment && (
+                    <div className="mt-3 p-3 bg-gradient-to-r from-primary/5 to-primary/10 border-l-4 border-primary/30 rounded-r-md shadow-sm">
+                      <div className="flex items-start space-x-2">
+                        <div className="flex-shrink-0 w-2 h-2 bg-primary/60 rounded-full mt-2"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <p className="text-xs font-semibold text-primary uppercase tracking-wide font-sans">
+                              Manager Feedback
+                            </p>
+                            <div className="h-px bg-primary/20 flex-1"></div>
+                          </div>
+                          <p className="text-sm text-foreground leading-relaxed font-sans mb-2">
+                            {expense.managerComment}
+                          </p>
+                          {(expense.approvedBy || expense.rejectedBy) && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1 h-1 bg-muted-foreground/40 rounded-full"></div>
+                              <p className="text-xs text-muted-foreground font-sans">
+                                {expense.status === 'approved' ? 'Approved' : 'Rejected'} by {expense.approvedBy?.name || expense.rejectedBy?.name}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-2 mt-2">
+                    <div className="w-1 h-1 bg-muted-foreground/40 rounded-full"></div>
+                    <p className="text-xs text-muted-foreground font-sans">
+                      {new Date(expense.date).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-gray-900">
+                <div className="text-right flex-shrink-0 ml-4">
+                  <p className="font-bold text-foreground font-sans text-lg">
                     {expense.currency.symbol || expense.currency.code}{" "}
                     {expense.amount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-sans mt-1">
+                    {expense.currency.code}
                   </p>
                 </div>
               </div>
