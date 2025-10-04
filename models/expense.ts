@@ -11,6 +11,7 @@ export interface IExpense {
   date: Date;
   description: string;
   receiptFile?: string;
+  userId: mongoose.Types.ObjectId;
   status: 'pending' | 'approved' | 'rejected';
   submittedAt: Date;
   updatedAt: Date;
@@ -31,6 +32,11 @@ const expenseSchema = new Schema<IExpense>({
   date: { type: Date, required: true },
   description: { type: String, required: true },
   receiptFile: { type: String },
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true 
+  },
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected'], 
