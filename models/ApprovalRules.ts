@@ -88,19 +88,7 @@ const ApprovalRuleSchema: Schema<IApprovalRule> = new Schema({
 });
 
 // Create and export the model
-// Force clear any existing model to ensure fresh schema
-if (mongoose.models.ApprovalRule) {
-  console.log("Deleting existing ApprovalRule model from cache");
-  delete mongoose.models.ApprovalRule;
-}
-
-// Also clear from mongoose.modelSchemas if it exists
-if ((mongoose as any).modelSchemas && (mongoose as any).modelSchemas.ApprovalRule) {
-  console.log("Deleting existing ApprovalRule schema from cache");
-  delete (mongoose as any).modelSchemas.ApprovalRule;
-}
-
-console.log("Creating fresh ApprovalRule model with organization field");
-const ApprovalRule: Model<IApprovalRule> = mongoose.model<IApprovalRule>("ApprovalRule", ApprovalRuleSchema);
+// Only create the model if it doesn't exist to avoid cache clearing issues
+const ApprovalRule: Model<IApprovalRule> = mongoose.models.ApprovalRule || mongoose.model<IApprovalRule>("ApprovalRule", ApprovalRuleSchema);
 
 export default ApprovalRule;

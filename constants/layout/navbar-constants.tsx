@@ -1,9 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import {
-  LayoutDashboard,
-} from "lucide-react";
+import { LayoutDashboard, FileImage, ShieldCheck } from "lucide-react";
 
 export type NavLink = {
   href: string;
@@ -13,17 +11,19 @@ export type NavLink = {
 
 export const NAVBAR = {
   logo: {
-    light: "/images/logo.svg",
+    light: "/images/logo-blue.svg",
     dark: "/images/logo-white.svg",
-    alt: "Placeholder Logo",
+    alt: "Expensio Logo",
     width: 32,
     height: 32,
   },
   name: {
-    primary: "Place",
-    secondary: "Holder",
+    primary: "Expen",
+    secondary: "sio",
   },
   links: [
-    { href: "/placeholder", label: "Placeholder", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/upload", label: "Upload Receipts", icon: FileImage },
+    { href: "/admin", label: "Admin Panel", icon: ShieldCheck },
   ] as NavLink[],
 } as const;
