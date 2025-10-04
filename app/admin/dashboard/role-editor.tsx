@@ -26,13 +26,13 @@ interface RoleEditorProps {
 const getRoleBadgeColor = (role: string) => {
   switch (role) {
     case "admin":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-destructive/10 text-destructive border-destructive/20";
     case "manager":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      return "bg-amber-500/10 text-amber-600 border-amber-500/20";
     case "employee":
-      return "bg-blue-100 text-blue-800 border-blue-200";
+      return "bg-primary/10 text-primary border-primary/20";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-muted text-muted-foreground border-border";
   }
 };
 
@@ -77,7 +77,7 @@ export function RoleEditor({
         <Badge className={getRoleBadgeColor(currentRole)}>
           {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
         </Badge>
-        <span className="text-xs text-gray-500">(You)</span>
+        <span className="text-xs text-muted-foreground font-sans">(You)</span>
       </div>
     );
   }
@@ -100,16 +100,16 @@ export function RoleEditor({
           variant="outline"
           onClick={handleCancel}
           disabled={isPending}
-          className="h-8 w-8 p-0">
+          className="h-8 w-8 p-0 border-border text-foreground hover:bg-muted">
           <X className="h-3 w-3" />
         </Button>
         <Button
           size="sm"
           onClick={handleSave}
           disabled={isPending}
-          className="h-8 w-8 p-0 bg-blue-600 hover:bg-blue-700">
+          className="h-8 w-8 p-0 bg-primary hover:bg-primary/90 text-primary-foreground">
           {isPending ? (
-            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary-foreground"></div>
           ) : (
             <Check className="h-3 w-3" />
           )}
@@ -127,7 +127,7 @@ export function RoleEditor({
         size="sm"
         variant="ghost"
         onClick={() => setIsEditing(true)}
-        className="h-6 w-6 p-0 hover:bg-gray-100">
+        className="h-6 w-6 p-0 hover:bg-muted">
         <Edit className="h-3 w-3" />
       </Button>
     </div>

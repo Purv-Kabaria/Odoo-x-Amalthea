@@ -25,16 +25,16 @@ export default async function EditApprovalRulePage({
 
   if (currentUser.role !== "admin") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-6">
-        <Card className="bg-white shadow-lg border border-red-200 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-6">
+        <Card className="bg-card shadow-lg border border-destructive/20 max-w-md w-full">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle className="text-xl font-bold text-red-900">
+            <CardTitle className="text-xl font-bold text-destructive font-sans">
               Access Denied
             </CardTitle>
-            <p className="text-red-600">
+            <p className="text-destructive font-sans">
               You don&apos;t have permission to access this page. Only
               administrators can edit approval rules.
             </p>
@@ -42,7 +42,7 @@ export default async function EditApprovalRulePage({
           <CardContent className="text-center">
             <Link
               href="/dashboard"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-sans"
             >
               Go to Dashboard
             </Link>
@@ -67,16 +67,16 @@ export default async function EditApprovalRulePage({
 
   if (!approvalRule) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-6">
-        <Card className="bg-white shadow-lg border border-red-200 max-w-md w-full">
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 flex items-center justify-center p-6">
+        <Card className="bg-card shadow-lg border border-destructive/20 max-w-md w-full">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-6 w-6 text-destructive" />
             </div>
-            <CardTitle className="text-xl font-bold text-red-900">
+            <CardTitle className="text-xl font-bold text-destructive font-sans">
               Rule Not Found
             </CardTitle>
-            <p className="text-red-600">
+            <p className="text-destructive font-sans">
               The approval rule you&apos;re looking for doesn&apos;t exist or
               has been deleted.
             </p>
@@ -84,7 +84,7 @@ export default async function EditApprovalRulePage({
           <CardContent className="text-center">
             <Link
               href="/admin/approvals"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-sans"
             >
               Back to Approval Rules
             </Link>
@@ -95,7 +95,7 @@ export default async function EditApprovalRulePage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-7xl mx-auto">
         <AdminApprovalRuleForm
           currentUserOrganization={currentUser.organization}
