@@ -3,8 +3,8 @@ import { Inter, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Placeholder",
-  description: "Placeholder",
+  title: "Expensio",
+  description: "Expensio",
 };
 
 const inter = Inter({
