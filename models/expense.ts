@@ -67,6 +67,7 @@ const ApprovalRecordSchema: Schema<IApprovalRecord> = new Schema({
   }
 });
 
+<<<<<<< HEAD
 // Schema for Expense document
 const ExpenseSchema: Schema<IExpense> = new Schema({
   company: { 
@@ -126,3 +127,6 @@ const ExpenseSchema: Schema<IExpense> = new Schema({
 const Expense: Model<IExpense> = mongoose.models.Expense || mongoose.model<IExpense>("Expense", ExpenseSchema);
 
 export default Expense;
+=======
+export const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
+>>>>>>> cf2f43bb737658e8478177bd8ca19b06c62f2f3c

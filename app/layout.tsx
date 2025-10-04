@@ -4,8 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: "Placeholder",
-  description: "Placeholder",
+  title: "Expensio",
+  description: "Expensio",
 };
 
 const inter = Inter({
