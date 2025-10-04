@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -34,20 +34,36 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchCurrencies, CurrencyOption } from "@/lib/currencyUtils"
 
-// Update the formSchema to remove receiptFile
+// Improved form schema with better validation
 const formSchema = z.object({
   expenseType: z.string().min(1, "Please select an expense type."),
-  amount: z.string().min(1, "Amount is required"),
+  amount: z.string()
+    .min(1, "Amount is required")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num > 0;
+    }, "Amount must be a valid positive number"),
   currency: z.string().min(1, "Please select a currency."),
-  date: z.date().refine(val => !!val, {
-    message: "Please select a date."
+  date: z.date().refine(val => {
+    if (!val) return false;
+    const today = new Date();
+    return val <= today;
+  }, {
+    message: "Date cannot be in the future."
   }),
-  description: z.string().min(5, "Description must be at least 5 characters."),
+  description: z.string()
+    .min(5, "Description must be at least 5 characters.")
+    .max(500, "Description must not exceed 500 characters."),
 });
 
 const SubmitExpense = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>([])
+  const [isLoadingCurrencies, setIsLoadingCurrencies] = useState(true)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,17 +74,55 @@ const SubmitExpense = () => {
     },
   })
 
+  // Fetch currencies when component mounts
+  useEffect(() => {
+    const getCurrencies = async () => {
+      setIsLoadingCurrencies(true)
+      try {
+        const currencyOptions = await fetchCurrencies()
+        setCurrencies(currencyOptions)
+      } catch (error) {
+        console.error("Failed to fetch currencies:", error)
+      } finally {
+        setIsLoadingCurrencies(false)
+      }
+    }
+
+    getCurrencies()
+  }, [])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmitSuccess(false);
     
     try {
-      // Format the data for submission - simplify as much as possible
+      // Validate amount again
+      const amount = parseFloat(values.amount);
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error("Please enter a valid positive amount.");
+      }
+      
+      // Find the selected currency object from our currencies array
+      const selectedCurrency = currencies.find(c => c.code === values.currency);
+      
+      if (!selectedCurrency) {
+        throw new Error("Selected currency not found. Please refresh and try again.");
+      }
+      
+      // Validate description
+      const description = values.description.trim();
+      if (description.length < 5) {
+        throw new Error("Description must be at least 5 characters long.");
+      }
+      
+      // Format the data for submission with the full currency object
       const expenseData = {
         expenseType: values.expenseType,
-        amount: parseFloat(values.amount),
-        currency: values.currency,
+        amount: amount,
+        currency: selectedCurrency, // Send the full currency object
         date: values.date.toISOString(),
-        description: values.description
+        description: description
       };
 
       console.log("Submitting expense data:", expenseData);
@@ -90,20 +144,31 @@ const SubmitExpense = () => {
       } catch (parseError) {
         console.log(parseError)
         console.error("Failed to parse response as JSON");
-        throw new Error("Server returned an invalid response");
+        throw new Error("Server returned an invalid response. Please try again.");
       }
 
       if (!response.ok) {
         console.error("Server error response:", data);
-        throw new Error(data.error || 'Failed to submit expense');
+        throw new Error(data.error || `Server error: ${response.status}`);
       }
 
       console.log("Expense created:", data);
-      alert("Expense submitted successfully! Awaiting approval.");
-      form.reset();
+      setSubmitSuccess(true);
+      form.reset({
+        description: "",
+        amount: "",
+        date: new Date(),
+        expenseType: "",
+        currency: ""
+      });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSubmitSuccess(false), 5000);
+      
     } catch (error: unknown) {
       console.error("Failed to submit expense:", error);
-      alert(error instanceof Error ? error.message : "Failed to submit expense. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to submit expense. Please try again.";
+      setSubmitError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -119,6 +184,18 @@ const SubmitExpense = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {submitSuccess && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-green-800">Expense submitted successfully! Awaiting approval.</p>
+            </div>
+          )}
+          
+          {submitError && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800">{submitError}</p>
+            </div>
+          )}
+          
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -224,16 +301,19 @@ const SubmitExpense = () => {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
+                            <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies..." : "Select currency"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="USD">USD - US Dollar</SelectItem>
-                          <SelectItem value="EUR">EUR - Euro</SelectItem>
-                          <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                          <SelectItem value="INR">INR - Indian Rupee</SelectItem>
-                          <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                          <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                          {isLoadingCurrencies ? (
+                            <SelectItem value="loading" disabled>Loading currencies...</SelectItem>
+                          ) : (
+                            currencies.map((currency) => (
+                              <SelectItem key={currency.code} value={currency.code}>
+                                {currency.code} - {currency.name} {currency.symbol ? `(${currency.symbol})` : ''}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -267,10 +347,19 @@ const SubmitExpense = () => {
               />
 
               <div className="flex justify-end space-x-4">
-                <Button variant="outline" type="button" onClick={() => form.reset()}>
+                <Button 
+                  variant="outline" 
+                  type="button" 
+                  onClick={() => {
+                    form.reset();
+                    setSubmitError(null);
+                    setSubmitSuccess(false);
+                  }}
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || isLoadingCurrencies}>
                   {isSubmitting ? "Submitting..." : "Submit Expense"}
                 </Button>
               </div>
