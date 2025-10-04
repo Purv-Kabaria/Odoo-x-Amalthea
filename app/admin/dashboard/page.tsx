@@ -1,19 +1,29 @@
-import { getAllUsersAction, getCurrentUserAction, deleteUserByAdminAction, updateUserRoleAction } from "@/app/actions/auth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Users, Shield, Mail, Calendar, AlertCircle, Trash2} from "lucide-react";
+import { getAllUsersAction, getCurrentUserAction } from "@/app/actions/auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Users,
+  Shield,
+  AlertCircle,
+  ArrowRight,
+  CheckSquare,
+} from "lucide-react";
 import { redirect } from "next/navigation";
-import { RoleEditor } from "./role-editor";
+import Link from "next/link";
 
 export default async function AdminDashboard() {
   // Check if user is authenticated and has admin role
   const currentUser = await getCurrentUserAction();
-  
+
   if (!currentUser) {
     redirect("/login");
   }
-  
+
   if (currentUser.role !== "admin") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-6">
@@ -22,14 +32,17 @@ export default async function AdminDashboard() {
             <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
-            <CardTitle className="text-xl font-bold text-red-900">Access Denied</CardTitle>
+            <CardTitle className="text-xl font-bold text-red-900">
+              Access Denied
+            </CardTitle>
             <CardDescription className="text-red-600">
-              You don&apos;t have permission to access this page. Only administrators can view the admin dashboard.
+              You don&apos;t have permission to access this page. Only
+              administrators can view the admin dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <a 
-              href="/dashboard" 
+            <a
+              href="/dashboard"
               className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               Go to Dashboard
@@ -44,20 +57,10 @@ export default async function AdminDashboard() {
 
   const userStats = {
     total: users.length,
-    admins: users.filter(user => user.role === "admin").length,
-    managers: users.filter(user => user.role === "manager").length,
-    employees: users.filter(user => user.role === "employee").length,
+    admins: users.filter((user) => user.role === "admin").length,
+    managers: users.filter((user) => user.role === "manager").length,
+    employees: users.filter((user) => user.role === "employee").length,
   };
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
@@ -69,7 +72,9 @@ export default async function AdminDashboard() {
               <Shield className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-blue-900">Admin Dashboard</h1>
+              <h1 className="text-3xl font-bold text-blue-900">
+                Admin Dashboard
+              </h1>
               <p className="text-blue-600">Manage and monitor user accounts</p>
             </div>
           </div>
@@ -86,9 +91,7 @@ export default async function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.total}</div>
-              <p className="text-xs text-blue-200">
-                All registered users
-              </p>
+              <p className="text-xs text-blue-200">All registered users</p>
             </CardContent>
           </Card>
 
@@ -101,9 +104,7 @@ export default async function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.admins}</div>
-              <p className="text-xs text-red-200">
-                Full access users
-              </p>
+              <p className="text-xs text-red-200">Full access users</p>
             </CardContent>
           </Card>
 
@@ -116,9 +117,7 @@ export default async function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.managers}</div>
-              <p className="text-xs text-yellow-200">
-                Management level access
-              </p>
+              <p className="text-xs text-yellow-200">Management level access</p>
             </CardContent>
           </Card>
 
@@ -131,145 +130,114 @@ export default async function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.employees}</div>
-              <p className="text-xs text-green-200">
-                Basic users
-              </p>
+              <p className="text-xs text-green-200">Basic users</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Users Table */}
-        <Card className="bg-white shadow-lg border border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-blue-900 flex items-center space-x-2">
-              <Users className="h-5 w-5" />
-              <span>User Management</span>
-            </CardTitle>
-            <CardDescription className="text-blue-600">
-              View and manage all user accounts in the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-blue-200">
-                    <th className="text-left py-3 px-4 font-semibold text-blue-900">Name</th>
-                    <th className="text-left py-3 px-4 font-semibold text-blue-900">Email</th>
-                    <th className="text-left py-3 px-4 font-semibold text-blue-900">Role</th>
-                    <th className="text-left py-3 px-4 font-semibold text-blue-900">Created</th>
-                    <th className="text-left py-3 px-4 font-semibold text-blue-900">Last Updated</th>
-                    <th className="text-center py-3 px-4 font-semibold text-blue-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.id} className="border-b border-blue-100 hover:bg-blue-50 transition-colors">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold text-sm">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <span className="font-medium text-gray-900">{user.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-blue-500" />
-                          <span className="text-gray-700">{user.email}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <RoleEditor
-                          userId={user.id}
-                          currentRole={user.role}
-                          userName={user.name}
-                          updateUserRoleAction={updateUserRoleAction}
-                          isCurrentUser={user.id === currentUser?.id}
-                        />
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-blue-500" />
-                          <span className="text-gray-700">{formatDate(user.createdAt)}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-4 w-4 text-blue-500" />
-                          <span className="text-gray-700">{formatDate(user.updatedAt)}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex justify-center">
-                          {/* Don't show delete button for current user */}
-                          {user.id !== currentUser?.id && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 hover:bg-red-600">
-                                  <Trash2 className="h-4 w-4" />
-                                  <span className="sr-only">Delete user</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-red-900">Delete User</AlertDialogTitle>
-                                  <AlertDialogDescription className="text-gray-600">
-                                    Are you sure you want to delete <strong>{user.name}</strong>? 
-                                    This action cannot be undone and will permanently remove the user from the system.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction asChild>
-                                    <form action={async () => {
-                                      "use server";
-                                      try {
-                                        await deleteUserByAdminAction(user.id);
-                                        // Refresh the page to show updated user list
-                                        redirect("/admin/dashboard");
-                                      } catch (error) {
-                                        console.error("Failed to delete user:", error);
-                                        // Still redirect to refresh the page
-                                        redirect("/admin/dashboard");
-                                      }
-                                    }}>
-                                      <Button type="submit" variant="destructive">
-                                        Yes, Delete User
-                                      </Button>
-                                    </form>
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                          {/* Show current user indicator */}
-                          {user.id === currentUser?.id && (
-                            <div className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-50 rounded">
-                              You
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {users.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 text-lg">No users found</p>
-                  <p className="text-gray-400">Users will appear here once they register</p>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Link href="/admin/users">
+            <Card className="bg-white shadow-lg border border-blue-200 hover:shadow-xl transition-all duration-200 cursor-pointer group hover:border-blue-300">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-3 bg-blue-500 rounded-lg group-hover:bg-blue-600 transition-colors">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-blue-500 group-hover:text-blue-600 transition-colors" />
                 </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                <CardTitle className="text-lg font-bold text-blue-900 group-hover:text-blue-800 transition-colors">
+                  User Management
+                </CardTitle>
+                <CardDescription className="text-blue-600">
+                  View and manage all user accounts, roles, and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Total Users:{" "}
+                    <span className="font-semibold text-blue-600">
+                      {userStats.total}
+                    </span>
+                  </div>
+                  <div className="text-xs text-blue-500 font-medium">
+                    Manage →
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link href="/admin/approvals">
+            <Card className="bg-white shadow-lg border border-green-200 hover:shadow-xl transition-all duration-200 cursor-pointer group hover:border-green-300">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="p-3 bg-green-500 rounded-lg group-hover:bg-green-600 transition-colors">
+                    <CheckSquare className="h-6 w-6 text-white" />
+                  </div>
+                  <ArrowRight className="h-5 w-5 text-green-500 group-hover:text-green-600 transition-colors" />
+                </div>
+                <CardTitle className="text-lg font-bold text-green-900 group-hover:text-green-800 transition-colors">
+                  Approval Rules
+                </CardTitle>
+                <CardDescription className="text-green-600">
+                  Manage approval workflows and expense approval rules
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Rules:{" "}
+                    <span className="font-semibold text-green-600">Active</span>
+                  </div>
+                  <div className="text-xs text-green-500 font-medium">
+                    Manage →
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Placeholder for future admin features */}
+          <Card className="bg-white shadow-lg border border-gray-200 opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 bg-gray-400 rounded-lg">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <CardTitle className="text-lg font-bold text-gray-600">
+                System Settings
+              </CardTitle>
+              <CardDescription className="text-gray-500">
+                Configure system-wide settings and preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-sm text-gray-500">Coming Soon</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white shadow-lg border border-gray-200 opacity-60">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="p-3 bg-gray-400 rounded-lg">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <CardTitle className="text-lg font-bold text-gray-600">
+                Reports & Analytics
+              </CardTitle>
+              <CardDescription className="text-gray-500">
+                View system reports and user activity analytics
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-sm text-gray-500">Coming Soon</div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
