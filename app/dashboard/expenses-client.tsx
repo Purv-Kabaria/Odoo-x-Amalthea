@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Receipt, Plus, DollarSign, TrendingUp } from "lucide-react";
@@ -17,6 +18,11 @@ interface Expense {
   description: string;
   status: 'pending' | 'approved' | 'rejected';
   submittedAt: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
 }
 
 interface ExpensesClientProps {
@@ -24,23 +30,47 @@ interface ExpensesClientProps {
 }
 
 export function ExpensesClient({ userId }: ExpensesClientProps) {
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [userId]);
 
   const fetchExpenses = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const response = await fetch('/api/expenses');
-      const data = await response.json();
-      setExpenses(data.filter((expense: any) => expense.userId._id === userId));
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch expenses: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      // Handle the API response structure (check if it has success and data properties)
+      const expensesData = result.success ? result.data : result;
+      
+      // Filter expenses for the current user
+      const userExpenses = expensesData.filter((expense: Expense) => 
+        expense.userId && expense.userId._id === userId
+      );
+      
+      setExpenses(userExpenses);
     } catch (error) {
       console.error('Failed to fetch expenses:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch expenses');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddExpenseClick = () => {
+    router.push('/expenseSubmission');
   };
 
   const getStatusBadgeColor = (status: string) => {
@@ -69,7 +99,7 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-            <p className="text-lg font-bold text-gray-900">${totalExpenses.toFixed(2)}</p>
+            <p className="text-lg font-bold text-gray-900">{totalExpenses.toFixed(2)} Rs</p>
           </div>
         </div>
         
@@ -98,7 +128,11 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <h4 className="font-medium text-gray-900">Recent Expenses</h4>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            onClick={handleAddExpenseClick}
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             <Plus className="h-4 w-4 mr-1" />
             Add Expense
           </Button>
@@ -106,8 +140,30 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
         
         {loading ? (
           <div className="p-4 text-center text-gray-500">Loading expenses...</div>
+        ) : error ? (
+          <div className="p-4 text-center text-red-500">
+            Error: {error}
+            <Button 
+              onClick={fetchExpenses} 
+              variant="outline" 
+              size="sm" 
+              className="ml-2"
+            >
+              Retry
+            </Button>
+          </div>
         ) : expenses.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">No expenses found</div>
+          <div className="p-4 text-center text-gray-500">
+            <p>No expenses found</p>
+            <Button 
+              onClick={handleAddExpenseClick}
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+            >
+              Submit your first expense
+            </Button>
+          </div>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {expenses.slice(0, 5).map((expense) => (
@@ -129,6 +185,18 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        
+        {expenses.length > 5 && (
+          <div className="text-center pt-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => router.push('/expenses')} // You can create an expenses list page later
+            >
+              View All Expenses ({expenses.length})
+            </Button>
           </div>
         )}
       </div>
