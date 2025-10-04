@@ -4,6 +4,43 @@ import { Expense } from "@/models/expense";
 import User from "@/models/User";
 import { fetchCurrencies, isValidCurrencyCode } from "@/lib/currencyUtils";
 
+interface ExpenseQuery {
+  userId?: string;
+  status?: string;
+}
+
+// Add GET handler for fetching expenses
+export async function GET(req: NextRequest) {
+  try {
+    await connectToDatabase();
+    
+    // Get query parameters
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    const status = searchParams.get('status');
+    
+    // Build query
+    const query: ExpenseQuery = {};
+    if (userId) query.userId = userId;
+    if (status) query.status = status;
+    
+    const expenses = await Expense.find(query)
+      .populate('userId', 'name email')
+      .sort({ submittedAt: -1 });
+    
+    return NextResponse.json({
+      success: true,
+      data: expenses
+    });
+  } catch (error) {
+    console.error("GET expenses error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch expenses" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     console.log("Starting expense creation process");
@@ -34,15 +71,25 @@ export async function POST(req: NextRequest) {
     }
     
     // Validate required fields
-    if (!data.expenseType || !data.amount || !data.currency || !data.date) {
+    if (!data.expenseType || !data.amount || !data.currency || !data.date || !data.description) {
       console.error("Missing required fields:", { 
         hasExpenseType: !!data.expenseType,
         hasAmount: !!data.amount, 
         hasCurrency: !!data.currency,
-        hasDate: !!data.date
+        hasDate: !!data.date,
+        hasDescription: !!data.description
       });
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: expenseType, amount, currency, date, and description are all required" },
+        { status: 400 }
+      );
+    }
+    
+    // Validate amount is a valid number
+    const amount = parseFloat(data.amount);
+    if (isNaN(amount) || amount <= 0) {
+      return NextResponse.json(
+        { error: "Amount must be a valid positive number" },
         { status: 400 }
       );
     }
@@ -64,7 +111,24 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    // Check currency using the quick validation function first
+    // Validate date
+    const expenseDate = new Date(data.date);
+    if (isNaN(expenseDate.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
+    }
+    
+    // Check if date is not in the future
+    if (expenseDate > new Date()) {
+      return NextResponse.json(
+        { error: "Expense date cannot be in the future" },
+        { status: 400 }
+      );
+    }
+    
+    // Check currency using the validation function
     if (!isValidCurrencyCode(data.currency.code)) {
       return NextResponse.json(
         { error: "Invalid currency code" },
@@ -109,15 +173,19 @@ export async function POST(req: NextRequest) {
       }
     }
     
-    // Prepare expense data
+    // Prepare expense data with proper types
     const expenseData = {
       expenseType: data.expenseType,
-      amount: Number(data.amount),
-      currency: data.currency,
-      date: new Date(data.date),
-      description: data.description || "",
+      amount: amount, // Use validated number
+      currency: {
+        code: data.currency.code,
+        name: data.currency.name,
+        symbol: data.currency.symbol || undefined
+      },
+      date: expenseDate, // Use validated date
+      description: data.description.trim(),
       userId: user._id,
-      status: 'pending',
+      status: 'pending' as const,
       submittedAt: new Date(),
       updatedAt: new Date()
     };
@@ -129,6 +197,7 @@ export async function POST(req: NextRequest) {
       await expense.save();
       
       return NextResponse.json({
+        success: true,
         message: "Expense created successfully",
         data: expense
       }, { status: 201 });
@@ -155,5 +224,55 @@ export async function POST(req: NextRequest) {
   }
 }
 
-
-// ...existing GET and PUT handlers...
+// Add PUT handler for updating expenses
+export async function PUT(req: NextRequest) {
+  try {
+    await connectToDatabase();
+    
+    const data = await req.json();
+    const { id, status } = data;
+    
+    if (!id) {
+      return NextResponse.json(
+        { error: "Expense ID is required" },
+        { status: 400 }
+      );
+    }
+    
+    const validStatuses = ['pending', 'approved', 'rejected'];
+    if (status && !validStatuses.includes(status)) {
+      return NextResponse.json(
+        { error: "Invalid status. Must be one of: pending, approved, rejected" },
+        { status: 400 }
+      );
+    }
+    
+    const expense = await Expense.findByIdAndUpdate(
+      id,
+      { 
+        ...data,
+        updatedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
+    
+    if (!expense) {
+      return NextResponse.json(
+        { error: "Expense not found" },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      message: "Expense updated successfully",
+      data: expense
+    });
+  } catch (error) {
+    console.error("PUT expenses error:", error);
+    return NextResponse.json(
+      { error: "Failed to update expense" },
+      { status: 500 }
+    );
+  }
+}

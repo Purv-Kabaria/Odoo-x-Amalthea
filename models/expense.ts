@@ -1,7 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IExpense {
-  userId: Schema.Types.ObjectId;
   expenseType: 'travel' | 'meal' | 'supplies' | 'software' | 'training' | 'other';
   amount: number;
   currency: {
@@ -18,7 +17,6 @@ export interface IExpense {
 }
 
 const expenseSchema = new Schema<IExpense>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   expenseType: { 
     type: String, 
     enum: ['travel', 'meal', 'supplies', 'software', 'training', 'other'],

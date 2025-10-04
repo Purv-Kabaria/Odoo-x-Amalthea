@@ -74,7 +74,7 @@ export async function fetchCurrencies(): Promise<CurrencyOption[]> {
     countries.forEach(country => {
       if (country.currencies) {
         Object.entries(country.currencies).forEach(([code, details]) => {
-          if (!currencyMap.has(code)) {
+          if (!currencyMap.has(code) && code && details.name) {
             currencyMap.set(code, {
               code,
               name: details.name,
@@ -91,10 +91,10 @@ export async function fetchCurrencies(): Promise<CurrencyOption[]> {
     );
     
     // Update the cache
-    currencyCache = result;
+    currencyCache = result.length > 0 ? result : fallbackCurrencies;
     lastFetchTime = now;
     
-    return result;
+    return currencyCache;
   } catch (error) {
     console.error('Error fetching currencies:', error);
     
@@ -112,30 +112,42 @@ export async function fetchCurrencies(): Promise<CurrencyOption[]> {
   }
 }
 
-// Update the function to handle both string codes and currency objects
+// Improved currency validation function
 export function isValidCurrencyCode(currency: string | CurrencyOption): boolean {
-  // Handle if we get passed a currency object instead of just the code
-  const code = typeof currency === 'object' && currency !== null && 'code' in currency 
-    ? currency.code 
-    : currency;
+  try {
+    // Handle if we get passed a currency object instead of just the code
+    const code = typeof currency === 'object' && currency !== null && 'code' in currency 
+      ? currency.code 
+      : currency;
+      
+    // Log a warning if we received something unexpected
+    if (typeof code !== 'string' || !code.trim()) {
+      console.warn(`isValidCurrencyCode received invalid input: ${JSON.stringify(currency)}`);
+      return false;
+    }
     
-  // Log a warning if we received something unexpected
-  if (typeof code !== 'string') {
-    console.warn(`isValidCurrencyCode received non-string: ${JSON.stringify(currency)}`);
+    const upperCode = code.trim().toUpperCase();
+    
+    // First check against our fallback currencies (this is always fast)
+    if (fallbackCurrencies.some(c => c.code === upperCode)) {
+      return true;
+    }
+    
+    // If we have a cached list, check against that too
+    if (currencyCache) {
+      return currencyCache.some(c => c.code === upperCode);
+    }
+    
+    // Check if it's a valid ISO 4217 currency code format (3 letters)
+    const currencyCodeRegex = /^[A-Z]{3}$/;
+    if (!currencyCodeRegex.test(upperCode)) {
+      return false;
+    }
+    
+    // Without a cache, we'll consider it potentially valid if it matches the format
+    return true;
+  } catch (error) {
+    console.error('Error in isValidCurrencyCode:', error);
     return false;
   }
-  
-  // First check against our fallback currencies (this is always fast)
-  if (fallbackCurrencies.some(c => c.code === code)) {
-    return true;
-  }
-  
-  // If we have a cached list, check against that too
-  if (currencyCache) {
-    return currencyCache.some(c => c.code === code);
-  }
-  
-  // Without a cache, we'll have to consider it potentially valid
-  // since we can't perform a full validation without an API call
-  return true;
 }
