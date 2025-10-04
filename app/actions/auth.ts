@@ -2,6 +2,7 @@
 
 import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
+import Company from "@/models/Company";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
@@ -10,6 +11,7 @@ type SignupInput = {
   name: string;
   email: string;
   password: string;
+  organization: string;
   role?: "admin" | "employee" | "manager";
 };
 
@@ -21,8 +23,8 @@ type LoginInput = {
 export async function signUpAction(data: SignupInput) {
   await connectToDatabase();
 
-  const { name, email, password, role = "employee" } = data;
-  if (!name || !email || !password) {
+  const { name, email, password, organization, role } = data;
+  if (!name || !email || !password || !organization) {
     throw new Error("Missing required fields");
   }
 
@@ -31,10 +33,29 @@ export async function signUpAction(data: SignupInput) {
     throw new Error("Email already in use");
   }
 
+  // Check if this organization already exists
+  const existingCompany = await Company.findOne({ name: organization });
+  const isFirstUser = !existingCompany;
+  const userRole = isFirstUser ? "admin" : "employee";
+
   const salt = await bcrypt.genSalt(10);
   const hashed = await bcrypt.hash(password, salt);
 
-  const user = await User.create({ name, email, password: hashed, role });
+  const user = await User.create({ 
+    name, 
+    email, 
+    password: hashed, 
+    organization,
+    role: role || userRole 
+  });
+
+  // If this is the first user for this organization, create a company record
+  if (isFirstUser) {
+    await Company.create({
+      name: organization,
+      adminId: String(user._id)
+    });
+  }
 
   const token = signToken({ id: user._id, role: user.role, email: user.email });
 
@@ -53,6 +74,7 @@ export async function signUpAction(data: SignupInput) {
     name: user.name,
     email: user.email,
     role: user.role,
+    organization: user.organization,
   };
 }
 

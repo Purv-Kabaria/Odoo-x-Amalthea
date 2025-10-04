@@ -12,18 +12,31 @@ import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", organization: "" });
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
+    // Validate passwords match
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    
+    // Validate password length
+    if (form.password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    
     setLoading(true);
     try {
       const user = await signUpAction({
         name: form.name,
         email: form.email,
         password: form.password,
-        role: "user" as const,
+        organization: form.organization,
       });
 
       // Redirect based on user role
@@ -78,6 +91,18 @@ export default function SignupPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700">
+                  Organization Name
+                </label>
+                <Input
+                  value={form.organization}
+                  onChange={(e) => setForm({ ...form, organization: e.target.value })}
+                  placeholder="Your organization name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
                   Password
                 </label>
                 <Input
@@ -87,6 +112,21 @@ export default function SignupPage() {
                     setForm({ ...form, password: e.target.value })
                   }
                   placeholder="Choose a strong password"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Confirm Password
+                </label>
+                <Input
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={(e) =>
+                    setForm({ ...form, confirmPassword: e.target.value })
+                  }
+                  placeholder="Confirm your password"
                   required
                 />
               </div>
