@@ -422,22 +422,6 @@ export default function ManagerDashboard() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Bottom Branding */}
-        <div className="mt-12 flex items-center justify-between border-t border-slate-200 pt-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">WS</span>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-slate-900">Whole Starling</div>
-              <div className="text-xs text-slate-500">Expense Management System</div>
-            </div>
-          </div>
-          <div className="text-xs text-slate-400">
-            Powered by Next.js & MongoDB
-          </div>
-        </div>
       </div>
     </div>
   );

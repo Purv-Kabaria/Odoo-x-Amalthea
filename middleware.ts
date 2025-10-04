@@ -67,6 +67,12 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/manager")) {
+    if (payload.role !== "manager") {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+  }
+
   const res = NextResponse.next();
 
   res.headers.set("x-user-id", payload.id || "");

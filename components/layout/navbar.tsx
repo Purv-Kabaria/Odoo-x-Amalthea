@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ArrowRight, User, LogOut, Settings, Shield } from "lucide-react";
+import { Menu, ArrowRight, User, LogOut, Settings, Shield, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { NAVBAR } from "@/constants/layout/navbar-constants";
@@ -166,7 +166,7 @@ export function Navbar() {
                   </DropdownMenuItem>
                   {(user.role === "admin" || user.email?.endsWith("@admin")) && (
                     <DropdownMenuItem asChild>
-                      <Link href="/admin" className="cursor-pointer">
+                      <Link href="/admin/dashboard" className="cursor-pointer">
                         <Shield className="mr-2 h-4 w-4" />
                         Admin Panel
                       </Link>
@@ -267,7 +267,7 @@ export function Navbar() {
                               variant="outline"
                               className="w-full">
                               <Link
-                                href="/admin"
+                                href="/admin/dashboard"
                                 className="flex items-center justify-center gap-2"
                                 onClick={() => setIsOpen(false)}>
                                 <Shield className="h-4 w-4" />
