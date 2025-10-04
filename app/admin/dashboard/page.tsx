@@ -45,11 +45,11 @@ export default async function AdminDashboard() {
   const userStats = {
     total: users.length,
     admins: users.filter(user => user.role === "admin").length,
-    moderators: users.filter(user => user.role === "moderator").length,
-    regularUsers: users.filter(user => user.role === "user").length,
+    managers: users.filter(user => user.role === "manager").length,
+    employees: users.filter(user => user.role === "employee").length,
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -115,9 +115,9 @@ export default async function AdminDashboard() {
               <Shield className="h-4 w-4 text-yellow-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.moderators}</div>
+              <div className="text-2xl font-bold">{userStats.managers}</div>
               <p className="text-xs text-yellow-200">
-                Limited admin access
+                Management level access
               </p>
             </CardContent>
           </Card>
@@ -125,14 +125,14 @@ export default async function AdminDashboard() {
           <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-green-100">
-                Regular Users
+                Employees
               </CardTitle>
               <Users className="h-4 w-4 text-green-200" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.regularUsers}</div>
+              <div className="text-2xl font-bold">{userStats.employees}</div>
               <p className="text-xs text-green-200">
-                Standard users
+                Basic users
               </p>
             </CardContent>
           </Card>

@@ -10,5 +10,5 @@ export function signToken(payload: Record<string, unknown>) {
 }
 
 export function verifyToken(token: string) {
-  return jwt.verify(token, JWT_SECRET) as { id: string; role: string; email: string };
+  return jwt.verify(token, JWT_SECRET) as { id: string; role: string; email: string; organization: string };
 }
