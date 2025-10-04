@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,14 @@ interface Expense {
     name: string;
     email: string;
   };
+  convertedAmount?: number;
+  convertedCurrency?: string;
+}
+
+interface ExchangeRates {
+  rates: Record<string, number>;
+  base: string;
+  date: string;
 }
 
 interface ExpensesClientProps {
@@ -34,10 +42,40 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
+
+  const fetchExchangeRates = useCallback(async () => {
+    try {
+      const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+      if (response.ok) {
+        const data = await response.json();
+        setExchangeRates(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch exchange rates:", error);
+    }
+  }, []);
+
+  const convertToINR = useCallback((amount: number, fromCurrency: string): number => {
+    if (!exchangeRates || fromCurrency === "INR") {
+      return amount;
+    }
+
+    const toUSD = amount / exchangeRates.rates[fromCurrency];
+    const toINR = toUSD * exchangeRates.rates["INR"];
+
+    return Math.round(toINR * 100) / 100;
+  }, [exchangeRates]);
 
   useEffect(() => {
-    fetchExpenses();
-  }, [userId]);
+    fetchExchangeRates();
+  }, [fetchExchangeRates]);
+
+  useEffect(() => {
+    if (exchangeRates) {
+      fetchExpenses();
+    }
+  }, [userId, exchangeRates]);
 
   const fetchExpenses = async () => {
     try {
@@ -59,8 +97,15 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
       const userExpenses = expensesData.filter((expense: Expense) => 
         expense.userId && expense.userId._id === userId
       );
+
+      // Add currency conversion if exchange rates are available
+      const expensesWithConversion = userExpenses.map((expense: Expense) => ({
+        ...expense,
+        convertedAmount: convertToINR(expense.amount, expense.currency.code),
+        convertedCurrency: "INR",
+      }));
       
-      setExpenses(userExpenses);
+      setExpenses(expensesWithConversion);
     } catch (error) {
       console.error('Failed to fetch expenses:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch expenses');
@@ -86,7 +131,7 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
     }
   };
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.convertedAmount || expense.amount), 0);
   const pendingExpenses = expenses.filter(e => e.status === 'pending').length;
 
   return (
@@ -99,7 +144,7 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-            <p className="text-lg font-bold text-gray-900">{totalExpenses.toFixed(2)} Rs</p>
+            <p className="text-lg font-bold text-gray-900">₹{totalExpenses.toFixed(2)} INR</p>
           </div>
         </div>
         
@@ -138,8 +183,10 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
           </Button>
         </div>
         
-        {loading ? (
-          <div className="p-4 text-center text-gray-500">Loading expenses...</div>
+        {loading || !exchangeRates ? (
+          <div className="p-4 text-center text-gray-500">
+            {loading ? "Loading expenses..." : "Loading exchange rates..."}
+          </div>
         ) : error ? (
           <div className="p-4 text-center text-red-500">
             Error: {error}
@@ -179,9 +226,23 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
                   <p className="text-xs text-gray-500">{new Date(expense.date).toLocaleDateString()}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-gray-900">
-                    {expense.currency.symbol || expense.currency.code} {expense.amount.toFixed(2)}
-                  </p>
+                  <div className="flex flex-col space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-600 font-semibold">
+                        {expense.currency.symbol || expense.currency.code} {expense.amount.toFixed(2)}
+                      </span>
+                    </div>
+                    {expense.convertedAmount && expense.convertedCurrency && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-green-600 font-bold text-lg">
+                          ₹{expense.convertedAmount.toFixed(2)} INR
+                        </span>
+                        <span className="text-gray-400 text-sm">
+                          (converted)
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
