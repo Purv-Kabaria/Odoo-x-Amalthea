@@ -110,21 +110,21 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Expenses Overview Card */}
-        <Card className="bg-white shadow-lg border border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-blue-900 flex items-center space-x-2">
-              <Receipt className="h-5 w-5" />
-              <span>Expenses Overview</span>
-            </CardTitle>
-            <CardDescription className="text-blue-600">
-              Track and manage your expense reports
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ExpensesClient userId={String(user._id)} />
-          </CardContent>
-        </Card>
+         {/* Expenses Overview Card */}
+         <Card className="bg-card shadow-lg border border-border">
+           <CardHeader>
+             <CardTitle className="text-xl font-bold text-foreground flex items-center space-x-2 font-sans">
+               <Receipt className="h-5 w-5" />
+               <span>Expenses Overview</span>
+             </CardTitle>
+             <CardDescription className="text-foreground/70 font-sans">
+               Track and manage your expense reports
+             </CardDescription>
+           </CardHeader>
+           <CardContent>
+             <ExpensesClient userId={String(user._id)} />
+           </CardContent>
+         </Card>
 
         {/* Account Information */}
         <Card className="bg-card shadow-lg border border-border">
@@ -201,7 +201,7 @@ export default async function DashboardPage() {
           {/* Admin Dashboard Link (if admin) */}
           {(user.role === "admin" || user.email?.endsWith("@admin")) && (
             <a 
-              href="/admin" 
+              href="/admin/dashboard" 
               className="flex-1"
             >
               <Button variant="outline" className="w-full border-border text-foreground hover:bg-muted font-sans">
