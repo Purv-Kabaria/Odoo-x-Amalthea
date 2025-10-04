@@ -23,9 +23,9 @@ import { getCurrentUserAction, logoutAction } from "@/app/actions/auth";
 
 interface User {
   id: string;
-  name: string;
   email: string;
   role: string;
+  organization: string;
 }
 
 export function Navbar() {
@@ -145,13 +145,13 @@ export function Navbar() {
                         : "border-primary/20 text-primary hover:border-primary/40 hover:bg-primary/5"
                     }`}>
                     <User className="h-4 w-4 mr-2" />
-                    {user.name}
+                    {user.email.split('@')[0]}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user.email.split('@')[0]}</p>
                       <p className="w-[200px] truncate text-sm text-muted-foreground">
                         {user.email}
                       </p>
@@ -246,7 +246,7 @@ export function Navbar() {
                       ) : user ? (
                         <div className="mt-6 space-y-3">
                           <div className="p-3 bg-gray-50 rounded-lg border">
-                            <p className="font-medium text-sm">{user.name}</p>
+                            <p className="font-medium text-sm">{user.email.split('@')[0]}</p>
                             <p className="text-xs text-gray-500 truncate">{user.email}</p>
                           </div>
                           <Button
