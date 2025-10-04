@@ -25,14 +25,46 @@ interface ApprovalRequest {
   createdAt: string;
 }
 
+interface ExchangeRates {
+  rates: Record<string, number>;
+  base: string;
+  date: string;
+}
+
 export default function ManagerDashboard() {
   const [approvalRequests, setApprovalRequests] = useState<ApprovalRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
 
   useEffect(() => {
+    fetchExchangeRates();
     fetchApprovalRequests();
   }, []);
+
+  const fetchExchangeRates = async () => {
+    try {
+      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      if (response.ok) {
+        const data = await response.json();
+        setExchangeRates(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch exchange rates:', error);
+    }
+  };
+
+  const convertToINR = (amount: number, fromCurrency: string): number => {
+    if (!exchangeRates || fromCurrency === 'INR') {
+      return amount;
+    }
+    
+    // Convert to USD first, then to INR
+    const toUSD = amount / exchangeRates.rates[fromCurrency];
+    const toINR = toUSD * exchangeRates.rates['INR'];
+    
+    return Math.round(toINR * 100) / 100; // Round to 2 decimal places
+  };
 
   const fetchApprovalRequests = async () => {
     try {
@@ -40,7 +72,13 @@ export default function ManagerDashboard() {
       
       if (response.ok) {
         const data = await response.json();
-        setApprovalRequests(data);
+        // Convert amounts to INR
+        const convertedData = data.map((request: ApprovalRequest) => ({
+          ...request,
+          convertedAmount: convertToINR(request.totalAmount, request.currency),
+          convertedCurrency: 'INR'
+        }));
+        setApprovalRequests(convertedData);
       } else {
         const errorData = await response.json();
         const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
@@ -109,7 +147,7 @@ export default function ManagerDashboard() {
     request.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
+  if (loading || !exchangeRates) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
         <div className="max-w-7xl mx-auto">
@@ -122,6 +160,11 @@ export default function ManagerDashboard() {
               ))}
             </div>
           </div>
+          {!exchangeRates && (
+            <div className="text-center py-8">
+              <div className="text-gray-400">Loading exchange rates...</div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -170,9 +213,9 @@ export default function ManagerDashboard() {
                     <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
                       Request Status
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
-                      Total amount (in company's currency)
-                    </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                        Amount (Original & INR)
+                      </th>
                     <th className="px-6 py-4 text-center text-sm font-medium text-white border-b border-gray-600">
                       Actions
                     </th>
@@ -203,14 +246,21 @@ export default function ManagerDashboard() {
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-white">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-red-400 font-semibold">
-                              {request.totalAmount} {request.currency}
-                            </span>
-                            {request.convertedAmount && request.convertedCurrency && (
-                              <span className="text-gray-300">
-                                (in {request.convertedCurrency}) = {request.convertedAmount}
+                          <div className="flex flex-col space-y-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-red-400 font-semibold">
+                                {request.totalAmount} {request.currency}
                               </span>
+                            </div>
+                            {request.convertedAmount && request.convertedCurrency && (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-green-400 font-bold text-lg">
+                                  ₹{request.convertedAmount} INR
+                                </span>
+                                <span className="text-gray-400 text-sm">
+                                  (converted)
+                                </span>
+                              </div>
                             )}
                           </div>
                         </td>

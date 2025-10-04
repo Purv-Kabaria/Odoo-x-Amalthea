@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['images.unsplash.com']
   },
-  serverExternalPackages: ['@google/generative-ai']
+  experimental: {
+    serverComponentsExternalPackages: ['@google/generative-ai']
+  }
 };
 
 export default nextConfig;

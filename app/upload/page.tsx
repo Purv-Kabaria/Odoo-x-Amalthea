@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -128,11 +127,9 @@ export default function UploadPage() {
                 <div className="space-y-2">
                   <Label>Preview</Label>
                   <div className="border border-border rounded-lg p-4 bg-muted">
-                    <Image
+                    <img
                       src={previewUrl}
                       alt="Preview"
-                      width={400}
-                      height={256}
                       className="max-w-full h-auto max-h-64 mx-auto rounded"
                     />
                   </div>

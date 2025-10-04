@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
-import Expense from "@/models/expense";
+import mongoose from "mongoose";
+// Import User model first to ensure it's registered before Expense model
 import User from "@/models/User";
+import Expense from "@/models/expense";
 import ApprovalRule from "@/models/ApprovalRules";
 
 export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
+    
+    // Ensure the models are available
+    if (!Expense) {
+      throw new Error('Expense model is not available');
+    }
+    
+    if (!User) {
+      throw new Error('User model is not available');
+    }
     
     // Get the manager ID from the request (you might want to get this from JWT token or session)
     const { searchParams } = new URL(request.url);

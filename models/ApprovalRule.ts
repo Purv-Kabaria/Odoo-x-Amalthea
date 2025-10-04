@@ -29,12 +29,8 @@ const ApprovalRuleSchema = new mongoose.Schema<IApprovalRule>(
   { timestamps: true }
 );
 
-// Clear the model cache to ensure fresh schema
-if (mongoose.models.ApprovalRule) {
-  delete mongoose.models.ApprovalRule;
-}
-
-const ApprovalRule: Model<IApprovalRule> = mongoose.model<IApprovalRule>("ApprovalRule", ApprovalRuleSchema);
+// Only create the model if it doesn't exist to avoid cache clearing issues
+const ApprovalRule: Model<IApprovalRule> = mongoose.models.ApprovalRule || mongoose.model<IApprovalRule>("ApprovalRule", ApprovalRuleSchema);
 
 export default ApprovalRule;
 

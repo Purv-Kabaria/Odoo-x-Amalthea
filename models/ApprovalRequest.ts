@@ -39,12 +39,8 @@ const ApprovalRequestSchema = new mongoose.Schema<IApprovalRequest>(
   { timestamps: true }
 );
 
-// Clear the model cache to ensure fresh schema
-if (mongoose.models.ApprovalRequest) {
-  delete mongoose.models.ApprovalRequest;
-}
-
-const ApprovalRequest: Model<IApprovalRequest> = mongoose.model<IApprovalRequest>("ApprovalRequest", ApprovalRequestSchema);
+// Only create the model if it doesn't exist to avoid cache clearing issues
+const ApprovalRequest: Model<IApprovalRequest> = mongoose.models.ApprovalRequest || mongoose.model<IApprovalRequest>("ApprovalRequest", ApprovalRequestSchema);
 
 export default ApprovalRequest;
 
