@@ -11,7 +11,7 @@ interface RoleEditorProps {
   userId: string;
   currentRole: string;
   userName: string;
-  updateUserRoleAction: (userId: string, newRole: "user" | "admin" | "moderator") => Promise<{
+  updateUserRoleAction: (userId: string, newRole: "admin" | "employee" | "manager") => Promise<{
     success: boolean;
     updatedUser: {
       id: string;
@@ -27,9 +27,9 @@ const getRoleBadgeColor = (role: string) => {
   switch (role) {
     case "admin":
       return "bg-red-100 text-red-800 border-red-200";
-    case "moderator":
+    case "manager":
       return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "user":
+    case "employee":
       return "bg-blue-100 text-blue-800 border-blue-200";
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
@@ -55,7 +55,7 @@ export function RoleEditor({
 
     startTransition(async () => {
       try {
-        await updateUserRoleAction(userId, selectedRole as "user" | "admin" | "moderator");
+        await updateUserRoleAction(userId, selectedRole as "admin" | "employee" | "manager");
         toast.success(`Role updated successfully for ${userName}!`);
         setIsEditing(false);
         // Refresh the page to show updated role
@@ -90,8 +90,8 @@ export function RoleEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="user">User</SelectItem>
-            <SelectItem value="moderator">Moderator</SelectItem>
+            <SelectItem value="employee">Employee</SelectItem>
+            <SelectItem value="manager">Manager</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>

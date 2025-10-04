@@ -10,7 +10,7 @@ type SignupInput = {
   name: string;
   email: string;
   password: string;
-  role?: "user" | "admin" | "moderator";
+  role?: "admin" | "employee" | "manager";
 };
 
 type LoginInput = {
@@ -21,7 +21,7 @@ type LoginInput = {
 export async function signUpAction(data: SignupInput) {
   await connectToDatabase();
 
-  const { name, email, password, role = "user" } = data;
+  const { name, email, password, role = "employee" } = data;
   if (!name || !email || !password) {
     throw new Error("Missing required fields");
   }
@@ -208,7 +208,7 @@ export async function deleteUserByAdminAction(targetUserId: string) {
   }
 }
 
-export async function updateUserRoleAction(targetUserId: string, newRole: "user" | "admin" | "moderator") {
+export async function updateUserRoleAction(targetUserId: string, newRole: "admin" | "employee" | "manager") {
   await connectToDatabase();
   
   // Get current user to verify admin permissions
@@ -227,7 +227,7 @@ export async function updateUserRoleAction(targetUserId: string, newRole: "user"
     }
     
     // Validate role
-    if (!["user", "admin", "moderator"].includes(newRole)) {
+    if (!["admin", "employee", "manager"].includes(newRole)) {
       throw new Error("Invalid role specified");
     }
     
