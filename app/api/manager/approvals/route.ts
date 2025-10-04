@@ -3,7 +3,7 @@ import connectToDatabase from "@/lib/mongoose";
 import mongoose from "mongoose";
 // Import User model first to ensure it's registered before Expense model
 import User from "@/models/User";
-import Expense from "@/models/expense";
+import { Expense } from "@/models/expense";
 import ApprovalRule from "@/models/ApprovalRules";
 
 export async function GET(request: NextRequest) {
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         .sort({ submittedAt: -1 })
         .limit(10); // Limit to 10 for testing
 
-      const testApprovalRequests = allExpenses.map(expense => ({
+      const testApprovalRequests = allExpenses.map((expense: any) => ({
         _id: expense._id,
         approvalSubject: expense.expenseType || 'Expense',
         requestOwner: {

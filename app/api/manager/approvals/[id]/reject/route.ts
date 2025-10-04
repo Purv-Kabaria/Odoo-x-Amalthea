@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
-import Expense from "@/models/expense";
+import { Expense } from "@/models/expense";
 
 export async function POST(
   request: NextRequest,
