@@ -4,12 +4,12 @@ import { Expense } from "@/models/expense";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectToDatabase();
 
-    const expenseId = params.id;
+    const { id: expenseId } = await params;
 
     const updatedExpense = await Expense.findByIdAndUpdate(
       expenseId,

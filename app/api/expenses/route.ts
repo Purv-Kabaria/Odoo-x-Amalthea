@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
 import { Expense } from "@/models/expense";
 import User from "@/models/User";
-import mongoose from "mongoose";
 
 export async function POST(req: NextRequest) {
   try {
@@ -124,7 +123,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     await connectToDatabase();
     
