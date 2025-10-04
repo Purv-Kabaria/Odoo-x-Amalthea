@@ -56,7 +56,6 @@ export default function ManagerDashboard() {
       const user = await getCurrentUserAction();
       if (user) {
         setCurrentUser(user);
-        console.log("Current user:", user);
       } else {
         toast.error("Please log in to access this page");
         // Redirect to login or handle authentication
