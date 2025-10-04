@@ -87,7 +87,8 @@ const SubmitExpense = () => {
       let data;
       try {
         data = JSON.parse(responseText);
-      } catch (e) {
+      } catch (parseError) {
+        console.log(parseError)
         console.error("Failed to parse response as JSON");
         throw new Error("Server returned an invalid response");
       }
@@ -100,9 +101,9 @@ const SubmitExpense = () => {
       console.log("Expense created:", data);
       alert("Expense submitted successfully! Awaiting approval.");
       form.reset();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to submit expense:", error);
-      alert(error.message || "Failed to submit expense. Please try again.");
+      alert(error instanceof Error ? error.message : "Failed to submit expense. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -258,7 +259,7 @@ const SubmitExpense = () => {
                       />
                     </FormControl>
                     <FormDescription>
-                      Explain the purpose of this expense (e.g., "Client lunch meeting with ABC Corp").
+                      Explain the purpose of this expense (e.g., &ldquo;Client lunch meeting with ABC Corp&rdquo;).
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

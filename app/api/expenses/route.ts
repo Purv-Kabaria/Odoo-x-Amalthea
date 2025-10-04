@@ -101,7 +101,13 @@ export async function POST(req: NextRequest) {
     try {
       // Using direct MongoDB API to debug
       const db = mongoose.connection.db;
-      const collection = db.collection('expenses'); // Make sure this matches your collection name
+      
+      // Check if db is defined
+      if (!db) {
+        throw new Error("Database connection is not established");
+      }
+      
+      const collection = db.collection('expenses'); // Now TypeScript knows db is defined
       
       // Convert amount to explicit double for MongoDB
       const expenseDataWithDouble = {
@@ -119,13 +125,22 @@ export async function POST(req: NextRequest) {
         data: { _id: result.insertedId, ...expenseData }
       }, { status: 201 });
       
-    } catch (directInsertError) {
+    } catch (directInsertError: unknown) {
       console.error("Direct MongoDB insertion error:", directInsertError);
       
+      // Type guard to check if the error is a MongoDB error with code and errInfo properties
+      const isMongoError = (err: unknown): err is { code: number; errInfo?: unknown } => 
+        typeof err === 'object' && 
+        err !== null && 
+        'code' in err &&
+        typeof (err).code === 'number';
+      
       // If direct insertion also fails, there's a deeper issue
-      if (directInsertError.code === 121) {
+      if (isMongoError(directInsertError) && directInsertError.code === 121) {
         // Get validation errors details
-        console.error("Validation error details:", JSON.stringify(directInsertError.errInfo));
+        console.error("Validation error details:", JSON.stringify(
+          'errInfo' in directInsertError ? directInsertError.errInfo : {}
+        ));
       }
       
       // Fall back to Mongoose and get more validation details
@@ -136,9 +151,10 @@ export async function POST(req: NextRequest) {
         console.log("Mongoose validation passed but MongoDB rejected document");
       } catch (validationError) {
         console.error("Mongoose validation error:", validationError);
-        if (validationError.errors) {
-          for (const field in validationError.errors) {
-            console.error(`Field '${field}' error:`, validationError.errors[field].message);
+        if (validationError && typeof validationError === 'object' && 'errors' in validationError) {
+          const errors = validationError.errors as Record<string, { message: string }>;
+          for (const field in errors) {
+            console.error(`Field '${field}' error:`, errors[field].message);
           }
         }
       }
@@ -148,10 +164,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Unexpected error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred", details: error.message },
+      { 
+        error: "An unexpected error occurred", 
+        details: error instanceof Error ? error.message : String(error) 
+      },
       { status: 500 }
     );
   }
