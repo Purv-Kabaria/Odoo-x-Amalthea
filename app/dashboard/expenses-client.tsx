@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 import { Receipt, Plus, DollarSign, TrendingUp } from "lucide-react";
 
 interface Expense {
@@ -40,7 +41,6 @@ export function ExpensesClient({ userId }: ExpensesClientProps) {
   const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(
     null
   );
