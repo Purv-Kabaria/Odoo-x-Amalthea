@@ -36,17 +36,25 @@ export async function POST(request: NextRequest) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = `
-    Analyze this image and extract the following expense information. Return ONLY a JSON object with these exact fields:
+    Analyze this receipt or expense document image and extract the following information. Return ONLY a JSON object with these exact fields:
     {
-      "amount": "extracted amount as string (e.g., '25.50') with currency symbol",
-      "paid_by": "person or entity who paid",
-      "description": "description of the expense (if not provided, but expense is mentioned, use the expense name as description)",
-      "category": "expense category (e.g., 'Food', 'Transport', 'Office', 'Travel', etc.)",
-      "date": "date in dd/mm/yyyy format"
+      "amount": "extracted amount as string (e.g., '25.50') - remove currency symbols, keep only numbers and decimal point",
+      "currency": "currency code (e.g., 'USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY', 'INR', 'SGD', 'HKD', 'CHF', 'NZD', 'MXN', 'BRL', 'ZAR', 'KRW', 'CNY', 'THB', 'MYR', 'PHP', 'IDR', 'VND', 'TWD', 'AED', 'SAR', 'QAR', 'KWD', 'BHD', 'OMR', 'JOD', 'LBP', 'EGP', 'TRY', 'RUB', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'HRK', 'SEK', 'NOK', 'DKK', 'ISK', 'UAH', 'BYN', 'RSD', 'MKD', 'BAM', 'ALL', 'MDL', 'GEL', 'AMD', 'AZN', 'KZT', 'UZS', 'KGS', 'TJS', 'TMT', 'AFN', 'PKR', 'LKR', 'BDT', 'NPR', 'BTN', 'MVR', 'MMK', 'LAK', 'KHR', 'BND', 'FJD', 'PGK', 'SBD', 'VUV', 'WST', 'TOP', 'TVD', 'XPF', 'NIO', 'GTQ', 'HNL', 'SVC', 'BZD', 'JMD', 'TTD', 'BBD', 'BMD', 'KYD', 'AWG', 'ANG', 'SRD', 'GYD', 'XCD', 'DOP', 'HTG', 'CUP', 'BSD', 'BZD', 'BBD', 'BMD', 'KYD', 'AWG', 'ANG', 'SRD', 'GYD', 'XCD', 'DOP', 'HTG', 'CUP', 'BSD')",
+      "description": "detailed description of the expense (e.g., 'Business lunch at Restaurant ABC', 'Taxi fare to client meeting', 'Office supplies from Staples')",
+      "category": "expense category - map to one of these: 'Food' (for meals, restaurants, groceries), 'Travel' (for transport, flights, hotels), 'Office' (for supplies, equipment), 'Software' (for subscriptions, licenses), 'Training' (for courses, books, education), 'Other' (for anything else)",
+      "date": "date in dd/mm/yyyy format (extract from receipt, not current date)",
+      "merchant": "merchant/store name (e.g., 'Starbucks', 'Uber', 'Amazon', 'Office Depot')"
     }
 
-    If any information cannot be extracted, use "N/A" as the value.
-    Focus on receipts, invoices, or expense documents.
+    IMPORTANT INSTRUCTIONS:
+    - For amount: Extract only the numeric value, remove currency symbols ($, €, £, etc.)
+    - For currency: If not clearly visible, infer from context (US receipts = USD, European = EUR, etc.)
+    - For description: Be specific and business-relevant, include merchant name if possible
+    - For category: Choose the most appropriate category from the list above
+    - For date: Extract the actual date from the receipt, not today's date
+    - If any information cannot be extracted, use "N/A" as the value
+    - Focus on business expense receipts, invoices, and expense documents
+    - Be accurate and conservative - if unsure, use "N/A"
     `;
 
     const result = await model.generateContent([
@@ -80,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     const requiredFields = [
       "amount",
-      "paid_by",
+      "currency",
       "description",
       "category",
       "date",
@@ -94,12 +102,22 @@ export async function POST(request: NextRequest) {
       console.warn("Some fields could not be extracted:", extractedData);
     }
 
+    // Clean up the amount to ensure it's a valid number string
+    let cleanAmount = extractedData.amount || "N/A";
+    if (cleanAmount !== "N/A") {
+      // Remove any non-numeric characters except decimal point
+      cleanAmount = cleanAmount.replace(/[^\d.,]/g, '');
+      // Replace comma with decimal point if needed
+      cleanAmount = cleanAmount.replace(',', '.');
+    }
+
     return NextResponse.json({
-      amount: extractedData.amount || "N/A",
-      paid_by: extractedData.paid_by || "N/A",
+      amount: cleanAmount,
+      currency: extractedData.currency || "N/A",
       description: extractedData.description || "N/A",
       category: extractedData.category || "N/A",
       date: extractedData.date || "N/A",
+      merchant: extractedData.merchant || "N/A",
     });
   } catch (error) {
     console.error("OCR API Error:", error);

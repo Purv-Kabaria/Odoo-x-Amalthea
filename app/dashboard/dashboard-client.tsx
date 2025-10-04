@@ -46,6 +46,8 @@ export function DashboardClient({ user, updateUserAction }: DashboardClientProps
         });
         toast.success("Profile updated successfully!");
         setIsEditing(false);
+        // Refresh the page to show updated name
+        window.location.reload();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Failed to update profile");
       }

@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, ArrowRight, User, LogOut, Settings, Shield, Users } from "lucide-react";
+import { Menu, ArrowRight, User, LogOut, Settings, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { NAVBAR } from "@/constants/layout/navbar-constants";
+import { NAVBAR, getNavLinks, UserRole } from "@/constants/layout/navbar-constants";
 import { getCurrentUserAction, logoutAction } from "@/app/actions/auth";
 
 interface User {
@@ -82,7 +82,8 @@ export function Navbar() {
     }
   };
 
-  const navItems = NAVBAR.links.map((link) => {
+  // Get navigation items based on user role
+  const navItems = getNavLinks(user?.role as UserRole).map((link) => {
     const Icon = link.icon;
     return {
       href: link.href,

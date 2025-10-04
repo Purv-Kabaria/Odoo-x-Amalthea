@@ -42,15 +42,18 @@ export async function GET() {
     healthCheck.services.database = "disconnected";
     healthCheck.responseTime = Date.now() - startTime;
     
-    // Add error details in development
-    if (process.env.NODE_ENV === "development") {
-      healthCheck.error = {
-        message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined
-      };
-    }
+    // Create response with error details in development
+    const response = {
+      ...healthCheck,
+      ...(process.env.NODE_ENV === "development" && {
+        error: {
+          message: error instanceof Error ? error.message : "Unknown error",
+          stack: error instanceof Error ? error.stack : undefined
+        }
+      })
+    };
     
-    return NextResponse.json(healthCheck, { 
+    return NextResponse.json(response, { 
       status: 503,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
