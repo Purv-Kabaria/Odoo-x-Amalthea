@@ -1,22 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { signUpAction } from "@/app/actions/auth";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import Link from "next/link";
 
 // Validation functions
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 const validatePassword = (
   password: string
 ): { isValid: boolean; errors: string[] } => {
@@ -48,51 +41,31 @@ const validatePassword = (
   };
 };
 
-export default function SignupPage() {
+function ResetPasswordForm() {
   const router = useRouter();
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    organization: "",
-  });
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState({ password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const tokenParam = searchParams.get("token");
+    if (!tokenParam) {
+      toast.error("Invalid reset link", {
+        description: "The password reset link is invalid or has expired.",
+      });
+      router.push("/forgot-password");
+      return;
+    }
+    setToken(tokenParam);
+    toast.info("Reset link verified", {
+      description: "You can now set your new password.",
+    });
+  }, [searchParams, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    // Validate name
-    if (!form.name.trim()) {
-      toast.error("Name is required", {
-        description: "Please enter your full name.",
-      });
-      return;
-    }
-
-    // Validate email
-    if (!form.email.trim()) {
-      toast.error("Email is required", {
-        description: "Please enter your email address.",
-      });
-      return;
-    }
-
-    if (!validateEmail(form.email)) {
-      toast.error("Please enter a valid email address", {
-        description: "Email format should be like: user@example.com",
-      });
-      return;
-    }
-
-    // Validate organization
-    if (!form.organization.trim()) {
-      toast.error("Organization name is required", {
-        description: "Please enter your organization name.",
-      });
-      return;
-    }
 
     // Validate password strength
     const passwordValidation = validatePassword(form.password);
@@ -104,10 +77,16 @@ export default function SignupPage() {
       return;
     }
 
-    // Validate passwords match
     if (form.password !== form.confirmPassword) {
       toast.error("Passwords do not match", {
         description: "Please make sure both password fields are identical.",
+      });
+      return;
+    }
+
+    if (!token) {
+      toast.error("Invalid reset token", {
+        description: "The reset token is missing or invalid.",
       });
       return;
     }
@@ -116,32 +95,58 @@ export default function SignupPage() {
     setPasswordErrors([]);
 
     try {
-      const user = await signUpAction({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        organization: form.organization,
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          token,
+          newPassword: form.password,
+        }),
       });
 
-      toast.success("Account created successfully!", {
-        description: `Welcome to Amalthea, ${user.name}!`,
-        duration: 4000,
-      });
+      const data = await response.json();
 
-      // Redirect based on user role
-      if (user.role === "admin" || user.email?.endsWith("@admin")) {
-        router.push("/admin/dashboard");
+      if (response.ok) {
+        toast.success("Password reset successfully!", {
+          description: "You can now log in with your new password.",
+          duration: 5000,
+        });
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
       } else {
-        router.push("/dashboard");
+        toast.error(data.error || "Failed to reset password", {
+          description: "Please try again or request a new reset link.",
+        });
       }
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Signup failed";
-      toast.error(errorMessage, {
-        description: "Please check your information and try again.",
+    } catch {
+      toast.error("Network error occurred", {
+        description: "Please check your internet connection and try again.",
       });
+    } finally {
       setLoading(false);
     }
+  }
+
+  if (!token) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="w-full max-w-md"
+        >
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-slate-600">Loading...</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
   }
 
   return (
@@ -154,52 +159,16 @@ export default function SignupPage() {
       >
         <Card>
           <CardHeader>
-            <CardTitle>Create account</CardTitle>
+            <CardTitle>Reset your password</CardTitle>
+            <p className="text-sm text-slate-600">
+              Enter your new password below.
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700">
-                  Name
-                </label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Your name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="you@example.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Organization Name
-                </label>
-                <Input
-                  value={form.organization}
-                  onChange={(e) =>
-                    setForm({ ...form, organization: e.target.value })
-                  }
-                  placeholder="Your organization name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700">
-                  Password
+                  New Password
                 </label>
                 <Input
                   type="password"
@@ -213,7 +182,7 @@ export default function SignupPage() {
                       setPasswordErrors([]);
                     }
                   }}
-                  placeholder="Choose a strong password"
+                  placeholder="Enter your new password"
                   required
                 />
                 {passwordErrors.length > 0 && (
@@ -238,30 +207,54 @@ export default function SignupPage() {
                   onChange={(e) =>
                     setForm({ ...form, confirmPassword: e.target.value })
                   }
-                  placeholder="Confirm your password"
+                  placeholder="Confirm your new password"
                   required
                 />
               </div>
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Creating..." : "Create account"}
+                {loading ? "Resetting..." : "Reset password"}
               </Button>
 
-              <div className="text-center mt-4">
-                <p className="text-sm text-slate-600">
-                  Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                  >
-                    Sign in
-                  </Link>
-                </p>
+              <div className="text-center">
+                <Link
+                  href="/login"
+                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  Back to login
+                </Link>
               </div>
             </form>
           </CardContent>
         </Card>
       </motion.div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="w-full max-w-md"
+      >
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-slate-600">Loading...</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }

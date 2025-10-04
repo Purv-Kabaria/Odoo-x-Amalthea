@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { User as UserIcon, Mail, Calendar, Shield, LogOut, Trash2, Edit, ArrowLeft } from "lucide-react";
+import { User as UserIcon, Mail, Calendar, Shield, LogOut, Trash2, Edit, ArrowLeft, Receipt } from "lucide-react";
 import { DashboardClient } from "@/app/dashboard/dashboard-client";
+import { ExpensesClient } from "@/app/dashboard/expenses-client";
 
 export default async function DashboardPage() {
   const token = (await cookies()).get("token")?.value;
@@ -106,6 +107,22 @@ export default async function DashboardPage() {
               }}
               updateUserAction={updateUserAction}
             />
+          </CardContent>
+        </Card>
+
+        {/* Expenses Overview Card */}
+        <Card className="bg-white shadow-lg border border-blue-200">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-blue-900 flex items-center space-x-2">
+              <Receipt className="h-5 w-5" />
+              <span>Expenses Overview</span>
+            </CardTitle>
+            <CardDescription className="text-blue-600">
+              Track and manage your expense reports
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExpensesClient userId={String(user._id)} />
           </CardContent>
         </Card>
 

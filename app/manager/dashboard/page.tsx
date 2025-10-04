@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export default function ManagerDashboard() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(
     null
   );
+  const fetchingRef = useRef(false);
 
   const fetchExchangeRates = async () => {
     try {
@@ -53,7 +54,7 @@ export default function ManagerDashboard() {
     }
   };
 
-  const convertToINR = (amount: number, fromCurrency: string): number => {
+  const convertToINR = useCallback((amount: number, fromCurrency: string): number => {
     if (!exchangeRates || fromCurrency === "INR") {
       return amount;
     }
@@ -62,9 +63,13 @@ export default function ManagerDashboard() {
     const toINR = toUSD * exchangeRates.rates["INR"];
 
     return Math.round(toINR * 100) / 100;
-  };
+  }, [exchangeRates]);
 
   const fetchApprovalRequests = useCallback(async () => {
+    if (fetchingRef.current) return; // Prevent multiple simultaneous requests
+    
+    fetchingRef.current = true;
+    setLoading(true);
     try {
       const response = await fetch("/api/manager/approvals");
 
@@ -90,13 +95,19 @@ export default function ManagerDashboard() {
       toast.error("Failed to load approval requests");
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [convertToINR]);
 
   useEffect(() => {
     fetchExchangeRates();
-    fetchApprovalRequests();
-  }, [fetchApprovalRequests]);
+  }, []);
+
+  useEffect(() => {
+    if (exchangeRates) {
+      fetchApprovalRequests();
+    }
+  }, [exchangeRates, fetchApprovalRequests]);
 
   const handleApprove = async (requestId: string) => {
     try {
