@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IExpense {
-  employeeId: Schema.Types.ObjectId;
+  userId: Schema.Types.ObjectId;  // Changed from employeeId to userId
   expenseType: string;
   amount: number;
   currency: string;
@@ -14,7 +14,7 @@ export interface IExpense {
 }
 
 const expenseSchema = new Schema<IExpense>({
-  employeeId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },  // Changed from employeeId
   expenseType: { type: String, required: true },
   amount: { type: Number, required: true },
   currency: { type: String, required: true },

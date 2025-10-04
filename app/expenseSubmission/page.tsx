@@ -72,13 +72,12 @@ const SubmitExpense = () => {
     setIsSubmitting(true);
     
     try {
-      // Convert amount to number
       const submitData = {
         ...values,
         amount: parseFloat(values.amount),
       };
 
-      const response = await fetch('/api/expenses', {
+      const response = await fetch('/api/expenses', {  // Updated path
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,16 +85,18 @@ const SubmitExpense = () => {
         body: JSON.stringify(submitData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to submit expense');
+        throw new Error(data.error || 'Failed to submit expense');
       }
 
       alert("Expense submitted successfully! Awaiting approval.");
       form.reset();
       setFileName(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit expense:", error);
-      alert("Failed to submit expense. Please try again.");
+      alert(error.message || "Failed to submit expense. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
