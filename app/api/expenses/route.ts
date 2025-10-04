@@ -3,7 +3,6 @@ import connectToDatabase from "@/lib/mongoose";
 import { Expense } from "@/models/expense";
 import { verifyToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
-import User from "@/models/User";
 import { fetchCurrencies, isValidCurrencyCode } from "@/lib/currencyUtils";
 
 interface ExpenseQuery {
