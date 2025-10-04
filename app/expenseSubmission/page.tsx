@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { CalendarIcon, UploadIcon } from "lucide-react"
+import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -33,9 +33,9 @@ import {
 } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-// Update the formSchema to match our database schema
+// Update the formSchema to remove receiptFile
 const formSchema = z.object({
   expenseType: z.string().min(1, "Please select an expense type."),
   amount: z.string().min(1, "Amount is required"),
@@ -44,12 +44,10 @@ const formSchema = z.object({
     message: "Please select a date."
   }),
   description: z.string().min(5, "Description must be at least 5 characters."),
-  receiptFile: z.any().optional(),
 });
 
 const SubmitExpense = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [fileName, setFileName] = useState<string | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,40 +58,48 @@ const SubmitExpense = () => {
     },
   })
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files && files.length > 0) {
-      setFileName(files[0].name)
-      form.setValue("receiptFile", files)
-    }
-  }
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
     try {
-      const submitData = {
-        ...values,
+      // Format the data for submission - simplify as much as possible
+      const expenseData = {
+        expenseType: values.expenseType,
         amount: parseFloat(values.amount),
+        currency: values.currency,
+        date: values.date.toISOString(),
+        description: values.description
       };
 
-      const response = await fetch('/api/expenses', {  // Updated path
+      console.log("Submitting expense data:", expenseData);
+
+      const response = await fetch('/api/expenses', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify(expenseData),
       });
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log("Raw response:", responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Failed to parse response as JSON");
+        throw new Error("Server returned an invalid response");
+      }
 
       if (!response.ok) {
+        console.error("Server error response:", data);
         throw new Error(data.error || 'Failed to submit expense');
       }
 
+      console.log("Expense created:", data);
       alert("Expense submitted successfully! Awaiting approval.");
       form.reset();
-      setFileName(null);
     } catch (error: any) {
       console.error("Failed to submit expense:", error);
       alert(error.message || "Failed to submit expense. Please try again.");
@@ -259,43 +265,6 @@ const SubmitExpense = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="receiptFile"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Receipt/Invoice</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center">
-                        <label 
-                          htmlFor="file-upload" 
-                          className="inline-flex items-center justify-center h-9 px-4 py-2 rounded-md border bg-background shadow-xs cursor-pointer hover:bg-accent hover:text-accent-foreground"
-                        >
-                          <UploadIcon className="mr-2 h-4 w-4" />
-                          Upload Receipt
-                        </label>
-                        <Input
-                          id="file-upload"
-                          type="file"
-                          accept="image/*,.pdf"
-                          onChange={handleFileChange}
-                          className="hidden"
-                        />
-                        {fileName && (
-                          <span className="ml-3 text-sm text-muted-foreground">
-                            {fileName}
-                          </span>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Attach a receipt or invoice (PDF or image format).
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="flex justify-end space-x-4">
                 <Button variant="outline" type="button" onClick={() => form.reset()}>
                   Cancel
@@ -313,4 +282,3 @@ const SubmitExpense = () => {
 }
 
 export default SubmitExpense
-
