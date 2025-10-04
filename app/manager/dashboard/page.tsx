@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,98 +32,110 @@ interface ExchangeRates {
 }
 
 export default function ManagerDashboard() {
-  const [approvalRequests, setApprovalRequests] = useState<ApprovalRequest[]>([]);
+  const [approvalRequests, setApprovalRequests] = useState<ApprovalRequest[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
-
-  useEffect(() => {
-    fetchExchangeRates();
-    fetchApprovalRequests();
-  }, []);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(
+    null
+  );
 
   const fetchExchangeRates = async () => {
     try {
-      const response = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
       if (response.ok) {
         const data = await response.json();
         setExchangeRates(data);
       }
     } catch (error) {
-      console.error('Failed to fetch exchange rates:', error);
+      console.error("Failed to fetch exchange rates:", error);
     }
   };
 
   const convertToINR = (amount: number, fromCurrency: string): number => {
-    if (!exchangeRates || fromCurrency === 'INR') {
+    if (!exchangeRates || fromCurrency === "INR") {
       return amount;
     }
-    
-    // Convert to USD first, then to INR
+
     const toUSD = amount / exchangeRates.rates[fromCurrency];
-    const toINR = toUSD * exchangeRates.rates['INR'];
-    
-    return Math.round(toINR * 100) / 100; // Round to 2 decimal places
+    const toINR = toUSD * exchangeRates.rates["INR"];
+
+    return Math.round(toINR * 100) / 100;
   };
 
-  const fetchApprovalRequests = async () => {
+  const fetchApprovalRequests = useCallback(async () => {
     try {
-      const response = await fetch('/api/manager/approvals');
-      
+      const response = await fetch("/api/manager/approvals");
+
       if (response.ok) {
         const data = await response.json();
-        // Convert amounts to INR
+
         const convertedData = data.map((request: ApprovalRequest) => ({
           ...request,
           convertedAmount: convertToINR(request.totalAmount, request.currency),
-          convertedCurrency: 'INR'
+          convertedCurrency: "INR",
         }));
         setApprovalRequests(convertedData);
       } else {
         const errorData = await response.json();
-        const errorMessage = errorData.details || errorData.error || `HTTP ${response.status}: ${response.statusText}`;
+        const errorMessage =
+          errorData.details ||
+          errorData.error ||
+          `HTTP ${response.status}: ${response.statusText}`;
         toast.error("Failed to load approval requests: " + errorMessage);
       }
     } catch (error) {
-      console.error('Failed to fetch approval requests:', error);
+      console.error("Failed to fetch approval requests:", error);
       toast.error("Failed to load approval requests");
     } finally {
       setLoading(false);
     }
-  };
+  }, [convertToINR]);
+
+  useEffect(() => {
+    fetchExchangeRates();
+    fetchApprovalRequests();
+  }, [fetchApprovalRequests]);
 
   const handleApprove = async (requestId: string) => {
     try {
-      const response = await fetch(`/api/manager/approvals/${requestId}/approve`, {
-        method: 'POST',
-      });
-      
+      const response = await fetch(
+        `/api/manager/approvals/${requestId}/approve`,
+        {
+          method: "POST",
+        }
+      );
+
       if (response.ok) {
         toast.success("Request approved successfully");
-        fetchApprovalRequests(); // Refresh the list
+        fetchApprovalRequests();
       } else {
         toast.error("Failed to approve request");
       }
     } catch (error) {
-      console.error('Error approving request:', error);
+      console.error("Error approving request:", error);
       toast.error("Failed to approve request");
     }
   };
 
   const handleReject = async (requestId: string) => {
     try {
-      const response = await fetch(`/api/manager/approvals/${requestId}/reject`, {
-        method: 'POST',
-      });
-      
+      const response = await fetch(
+        `/api/manager/approvals/${requestId}/reject`,
+        {
+          method: "POST",
+        }
+      );
+
       if (response.ok) {
         toast.success("Request rejected successfully");
-        fetchApprovalRequests(); // Refresh the list
+        fetchApprovalRequests();
       } else {
         toast.error("Failed to reject request");
       }
     } catch (error) {
-      console.error('Error rejecting request:', error);
+      console.error("Error rejecting request:", error);
       toast.error("Failed to reject request");
     }
   };
@@ -141,10 +153,15 @@ export default function ManagerDashboard() {
     }
   };
 
-  const filteredRequests = approvalRequests.filter(request =>
-    request.approvalSubject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requestOwner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRequests = approvalRequests.filter(
+    (request) =>
+      request.approvalSubject
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      request.requestOwner.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      request.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading || !exchangeRates) {
@@ -175,7 +192,9 @@ export default function ManagerDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: 'cursive' }}>
+          <h1
+            className="text-4xl font-bold text-white mb-2"
+            style={{ fontFamily: "cursive" }}>
             Approvals to review
           </h1>
         </div>
@@ -192,7 +211,6 @@ export default function ManagerDashboard() {
             />
           </div>
         </div>
-
 
         {/* Approvals Table */}
         <Card className="bg-gray-800 border-gray-700">
@@ -213,9 +231,9 @@ export default function ManagerDashboard() {
                     <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
                       Request Status
                     </th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
-                        Amount (Original & INR)
-                      </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Amount (Original & INR)
+                    </th>
                     <th className="px-6 py-4 text-center text-sm font-medium text-white border-b border-gray-600">
                       Actions
                     </th>
@@ -224,13 +242,17 @@ export default function ManagerDashboard() {
                 <tbody className="divide-y divide-gray-600">
                   {filteredRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                      <td
+                        colSpan={6}
+                        className="px-6 py-12 text-center text-gray-400">
                         No approval requests found
                       </td>
                     </tr>
                   ) : (
                     filteredRequests.map((request) => (
-                      <tr key={request._id} className="hover:bg-gray-700 transition-colors">
+                      <tr
+                        key={request._id}
+                        className="hover:bg-gray-700 transition-colors">
                         <td className="px-6 py-4 text-white">
                           {request.approvalSubject || "none"}
                         </td>
@@ -241,8 +263,12 @@ export default function ManagerDashboard() {
                           {request.category}
                         </td>
                         <td className="px-6 py-4">
-                          <Badge className={getStatusBadgeColor(request.requestStatus)}>
-                            {request.requestStatus.charAt(0).toUpperCase() + request.requestStatus.slice(1)}
+                          <Badge
+                            className={getStatusBadgeColor(
+                              request.requestStatus
+                            )}>
+                            {request.requestStatus.charAt(0).toUpperCase() +
+                              request.requestStatus.slice(1)}
                           </Badge>
                         </td>
                         <td className="px-6 py-4 text-white">
@@ -252,16 +278,17 @@ export default function ManagerDashboard() {
                                 {request.totalAmount} {request.currency}
                               </span>
                             </div>
-                            {request.convertedAmount && request.convertedCurrency && (
-                              <div className="flex items-center space-x-2">
-                                <span className="text-green-400 font-bold text-lg">
-                                  ₹{request.convertedAmount} INR
-                                </span>
-                                <span className="text-gray-400 text-sm">
-                                  (converted)
-                                </span>
-                              </div>
-                            )}
+                            {request.convertedAmount &&
+                              request.convertedCurrency && (
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-green-400 font-bold text-lg">
+                                    ₹{request.convertedAmount} INR
+                                  </span>
+                                  <span className="text-gray-400 text-sm">
+                                    (converted)
+                                  </span>
+                                </div>
+                              )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -269,16 +296,14 @@ export default function ManagerDashboard() {
                             <Button
                               onClick={() => handleApprove(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              className="bg-green-600 hover:bg-green-700 text-white border border-green-500 px-4 py-2 rounded"
-                            >
+                              className="bg-green-600 hover:bg-green-700 text-white border border-green-500 px-4 py-2 rounded">
                               <Check className="h-4 w-4 mr-1" />
                               Approve
                             </Button>
                             <Button
                               onClick={() => handleReject(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              className="bg-red-600 hover:bg-red-700 text-white border border-red-500 px-4 py-2 rounded"
-                            >
+                              className="bg-red-600 hover:bg-red-700 text-white border border-red-500 px-4 py-2 rounded">
                               <X className="h-4 w-4 mr-1" />
                               Reject
                             </Button>
