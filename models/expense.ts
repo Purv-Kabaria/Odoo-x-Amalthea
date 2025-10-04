@@ -1,10 +1,14 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IExpense {
-  userId: Schema.Types.ObjectId;  // Changed from employeeId to userId
-  expenseType: string;
+  userId: Schema.Types.ObjectId;
+  expenseType: 'travel' | 'meal' | 'supplies' | 'software' | 'training' | 'other';
   amount: number;
-  currency: string;
+  currency: {
+    code: string;
+    name: string;
+    symbol?: string;
+  };
   date: Date;
   description: string;
   receiptFile?: string;
@@ -14,10 +18,18 @@ export interface IExpense {
 }
 
 const expenseSchema = new Schema<IExpense>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },  // Changed from employeeId
-  expenseType: { type: String, required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  expenseType: { 
+    type: String, 
+    enum: ['travel', 'meal', 'supplies', 'software', 'training', 'other'],
+    required: true 
+  },
   amount: { type: Number, required: true },
-  currency: { type: String, required: true },
+  currency: { 
+    code: { type: String, required: true },
+    name: { type: String, required: true },
+    symbol: { type: String }
+  },
   date: { type: Date, required: true },
   description: { type: String, required: true },
   receiptFile: { type: String },

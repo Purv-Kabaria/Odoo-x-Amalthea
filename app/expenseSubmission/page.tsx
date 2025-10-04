@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -34,6 +34,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { fetchCurrencies, CurrencyOption } from "@/lib/currencyUtils"
 
 // Update the formSchema to remove receiptFile
 const formSchema = z.object({
@@ -48,6 +49,8 @@ const formSchema = z.object({
 
 const SubmitExpense = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currencies, setCurrencies] = useState<CurrencyOption[]>([])
+  const [isLoadingCurrencies, setIsLoadingCurrencies] = useState(true)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,15 +61,39 @@ const SubmitExpense = () => {
     },
   })
 
+  // Fetch currencies when component mounts
+  useEffect(() => {
+    const getCurrencies = async () => {
+      setIsLoadingCurrencies(true)
+      try {
+        const currencyOptions = await fetchCurrencies()
+        setCurrencies(currencyOptions)
+      } catch (error) {
+        console.error("Failed to fetch currencies:", error)
+      } finally {
+        setIsLoadingCurrencies(false)
+      }
+    }
+
+    getCurrencies()
+  }, [])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     
     try {
-      // Format the data for submission - simplify as much as possible
+      // Find the selected currency object from our currencies array
+      const selectedCurrency = currencies.find(c => c.code === values.currency);
+      
+      if (!selectedCurrency) {
+        throw new Error("Selected currency not found. Please try again.");
+      }
+      
+      // Format the data for submission with the full currency object
       const expenseData = {
         expenseType: values.expenseType,
         amount: parseFloat(values.amount),
-        currency: values.currency,
+        currency: selectedCurrency, // Send the full currency object
         date: values.date.toISOString(),
         description: values.description
       };
@@ -224,16 +251,19 @@ const SubmitExpense = () => {
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
+                            <SelectValue placeholder={isLoadingCurrencies ? "Loading currencies..." : "Select currency"} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="USD">USD - US Dollar</SelectItem>
-                          <SelectItem value="EUR">EUR - Euro</SelectItem>
-                          <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                          <SelectItem value="INR">INR - Indian Rupee</SelectItem>
-                          <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                          <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
+                          {isLoadingCurrencies ? (
+                            <SelectItem value="loading" disabled>Loading currencies...</SelectItem>
+                          ) : (
+                            currencies.map((currency) => (
+                              <SelectItem key={currency.code} value={currency.code}>
+                                {currency.code} - {currency.name} {currency.symbol ? `(${currency.symbol})` : ''}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <FormDescription>

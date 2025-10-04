@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
 import { Expense } from "@/models/expense";
 import User from "@/models/User";
-import mongoose from "mongoose";
+import { fetchCurrencies, isValidCurrencyCode } from "@/lib/currencyUtils";
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,6 +47,36 @@ export async function POST(req: NextRequest) {
       );
     }
     
+    // Validate currency has required properties
+    if (!data.currency.code || !data.currency.name) {
+      return NextResponse.json(
+        { error: "Currency must have both code and name properties" },
+        { status: 400 }
+      );
+    }
+    
+    // Validate expense type against allowed values
+    const validExpenseTypes = ['travel', 'meal', 'supplies', 'software', 'training', 'other'];
+    if (!validExpenseTypes.includes(data.expenseType)) {
+      return NextResponse.json(
+        { error: `Invalid expense type. Must be one of: ${validExpenseTypes.join(', ')}` },
+        { status: 400 }
+      );
+    }
+    
+    // Check currency using the quick validation function first
+    if (!isValidCurrencyCode(data.currency.code)) {
+      return NextResponse.json(
+        { error: "Invalid currency code" },
+        { status: 400 }
+      );
+    }
+    
+    // Try to fetch currencies in background to update cache, but don't wait for it
+    fetchCurrencies().catch(error => {
+      console.warn("Background currency fetch failed:", error);
+    });
+
     // First try to find a user
     let user;
     try {
@@ -78,14 +108,11 @@ export async function POST(req: NextRequest) {
         );
       }
     }
-
-    // DEBUG: Log the Expense model schema to see what it expects
-    console.log("Expense schema paths:", Object.keys(Expense.schema.paths));
     
-    // Prepare expense data - try to match exactly what the schema expects
+    // Prepare expense data
     const expenseData = {
       expenseType: data.expenseType,
-      amount: Number(data.amount) + 0.0, // Force it to be a double by adding 0.0
+      amount: Number(data.amount),
       currency: data.currency,
       date: new Date(data.date),
       description: data.description || "",
@@ -97,70 +124,22 @@ export async function POST(req: NextRequest) {
 
     console.log("Creating expense with data:", JSON.stringify(expenseData));
     
-    // Try a direct MongoDB insertion to bypass Mongoose validation temporarily
     try {
-      // Using direct MongoDB API to debug
-      const db = mongoose.connection.db;
-      
-      // Check if db is defined
-      if (!db) {
-        throw new Error("Database connection is not established");
-      }
-      
-      const collection = db.collection('expenses'); // Now TypeScript knows db is defined
-      
-      // Convert amount to explicit double for MongoDB
-      const expenseDataWithDouble = {
-        ...expenseData,
-        amount: new mongoose.Types.Decimal128(expenseData.amount.toString())
-      };
-      
-      console.log("Inserting with explicit double conversion:", expenseDataWithDouble.amount);
-      
-      const result = await collection.insertOne(expenseDataWithDouble);
-      console.log("Expense inserted using direct MongoDB API:", result);
+      const expense = new Expense(expenseData);
+      await expense.save();
       
       return NextResponse.json({
-        message: "Expense created successfully (direct insertion)",
-        data: { _id: result.insertedId, ...expenseData }
+        message: "Expense created successfully",
+        data: expense
       }, { status: 201 });
-      
-    } catch (directInsertError: unknown) {
-      console.error("Direct MongoDB insertion error:", directInsertError);
-      
-      // Type guard to check if the error is a MongoDB error with code and errInfo properties
-      const isMongoError = (err: unknown): err is { code: number; errInfo?: unknown } => 
-        typeof err === 'object' && 
-        err !== null && 
-        'code' in err &&
-        typeof (err).code === 'number';
-      
-      // If direct insertion also fails, there's a deeper issue
-      if (isMongoError(directInsertError) && directInsertError.code === 121) {
-        // Get validation errors details
-        console.error("Validation error details:", JSON.stringify(
-          'errInfo' in directInsertError ? directInsertError.errInfo : {}
-        ));
-      }
-      
-      // Fall back to Mongoose and get more validation details
-      try {
-        const expense = new Expense(expenseData);
-        await expense.validate();
-        // If we get here, the validation passed in Mongoose but not in MongoDB
-        console.log("Mongoose validation passed but MongoDB rejected document");
-      } catch (validationError) {
-        console.error("Mongoose validation error:", validationError);
-        if (validationError && typeof validationError === 'object' && 'errors' in validationError) {
-          const errors = validationError.errors as Record<string, { message: string }>;
-          for (const field in errors) {
-            console.error(`Field '${field}' error:`, errors[field].message);
-          }
-        }
-      }
+    } catch (saveError: unknown) {
+      console.error("Expense save error:", saveError);
       
       return NextResponse.json(
-        { error: "Failed to create expense due to validation errors" },
+        { 
+          error: "Failed to create expense", 
+          details: saveError instanceof Error ? saveError.message : String(saveError)
+        },
         { status: 400 }
       );
     }
@@ -175,5 +154,6 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 // ...existing GET and PUT handlers...
