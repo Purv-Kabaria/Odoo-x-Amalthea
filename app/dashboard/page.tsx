@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { User as UserIcon, Mail, Calendar, Shield, LogOut, Trash2, Edit } from "lucide-react";
+import { User as UserIcon, Mail, Calendar, Shield, LogOut, Trash2, Edit, ArrowLeft } from "lucide-react";
 import { DashboardClient } from "@/app/dashboard/dashboard-client";
 
 export default async function DashboardPage() {
@@ -38,29 +38,40 @@ export default async function DashboardPage() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "admin":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-destructive/10 text-destructive border-destructive/20";
       case "moderator":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-accent text-accent-foreground border-accent/20";
       case "user":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-primary/10 text-primary border-primary/20";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-muted-foreground border-border";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-200">
+        <div className="bg-card rounded-xl shadow-lg p-6 border border-border">
+          {/* Back Button */}
+          <div className="mb-4">
+            <a 
+              href="/"
+              className="inline-flex items-center space-x-2 text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 group"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
+              <span>Back to Home</span>
+            </a>
+          </div>
+          
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-3 bg-blue-500 rounded-full">
-                <UserIcon className="h-8 w-8 text-white" />
+              <div className="p-3 bg-primary rounded-full">
+                <UserIcon className="h-8 w-8 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-blue-900">Welcome back, {user.name}!</h1>
-                <p className="text-blue-600">Manage your account and profile settings</p>
+                <h1 className="text-3xl font-bold text-foreground font-sans">Welcome back, {user.name}!</h1>
+                <p className="text-foreground/70 font-sans">Manage your account and profile settings</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -73,13 +84,13 @@ export default async function DashboardPage() {
         </div>
 
         {/* User Details Card */}
-        <Card className="bg-white shadow-lg border border-blue-200">
+        <Card className="bg-card shadow-lg border border-border">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-blue-900 flex items-center space-x-2">
+            <CardTitle className="text-xl font-bold text-foreground flex items-center space-x-2 font-sans">
               <Edit className="h-5 w-5" />
               <span>Profile Information</span>
             </CardTitle>
-            <CardDescription className="text-blue-600">
+            <CardDescription className="text-foreground/70 font-sans">
               Update your personal information and account details
             </CardDescription>
           </CardHeader>
@@ -99,34 +110,34 @@ export default async function DashboardPage() {
         </Card>
 
         {/* Account Information */}
-        <Card className="bg-white shadow-lg border border-blue-200">
+        <Card className="bg-card shadow-lg border border-border">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-blue-900 flex items-center space-x-2">
+            <CardTitle className="text-xl font-bold text-foreground flex items-center space-x-2 font-sans">
               <Mail className="h-5 w-5" />
               <span>Account Details</span>
             </CardTitle>
-            <CardDescription className="text-blue-600">
+            <CardDescription className="text-foreground/70 font-sans">
               View your account information and activity
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Mail className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Mail className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Email Address</p>
-                  <p className="text-gray-900">{user.email}</p>
+                  <p className="text-sm font-medium text-muted-foreground font-sans">Email Address</p>
+                  <p className="text-foreground font-sans">{user.email}</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Shield className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Shield className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Account Role</p>
+                  <p className="text-sm font-medium text-muted-foreground font-sans">Account Role</p>
                   <Badge className={getRoleBadgeColor(user.role)}>
                     {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                   </Badge>
@@ -134,22 +145,22 @@ export default async function DashboardPage() {
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Calendar className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Member Since</p>
-                  <p className="text-gray-900">{formatDate(user.createdAt)}</p>
+                  <p className="text-sm font-medium text-muted-foreground font-sans">Member Since</p>
+                  <p className="text-foreground font-sans">{formatDate(user.createdAt)}</p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Calendar className="h-4 w-4 text-blue-600" />
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Calendar className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Last Updated</p>
-                  <p className="text-gray-900">{formatDate(user.updatedAt)}</p>
+                  <p className="text-sm font-medium text-muted-foreground font-sans">Last Updated</p>
+                  <p className="text-foreground font-sans">{formatDate(user.updatedAt)}</p>
                 </div>
               </div>
             </div>
@@ -164,7 +175,7 @@ export default async function DashboardPage() {
             await logoutAction();
             redirect("/");
           }} className="flex-1">
-            <Button type="submit" variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
+            <Button type="submit" variant="outline" className="w-full border-border text-foreground hover:bg-muted font-sans">
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
@@ -176,7 +187,7 @@ export default async function DashboardPage() {
               href="/admin" 
               className="flex-1"
             >
-              <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Button variant="outline" className="w-full border-border text-foreground hover:bg-muted font-sans">
                 <Shield className="h-4 w-4 mr-2" />
                 Admin Dashboard
               </Button>
@@ -186,28 +197,28 @@ export default async function DashboardPage() {
           {/* Delete Account Button */}
           <AlertDialog>
             <AlertDialogTrigger asChild className="flex-1">
-              <Button variant="destructive" className="w-full">
+              <Button variant="destructive" className="w-full font-sans">
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Account
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-red-900">Delete Account</AlertDialogTitle>
-                <AlertDialogDescription className="text-gray-600">
+                <AlertDialogTitle className="text-destructive font-sans">Delete Account</AlertDialogTitle>
+                <AlertDialogDescription className="text-muted-foreground font-sans">
                   Are you absolutely sure you want to delete your account? This action cannot be undone.
                   This will permanently delete your account and remove all your data from our servers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="font-sans">Cancel</AlertDialogCancel>
                 <AlertDialogAction asChild>
                   <form action={async () => {
                     "use server";
                     await deleteUserAction(String(user._id));
                     redirect("/");
                   }}>
-                    <Button type="submit" variant="destructive">
+                    <Button type="submit" variant="destructive" className="font-sans">
                       Yes, Delete Account
                     </Button>
                   </form>
