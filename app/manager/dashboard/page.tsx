@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,9 @@ export default function ManagerDashboard() {
 
   const fetchExchangeRates = async () => {
     try {
-      const response = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+      const response = await fetch(
+        "https://api.exchangerate-api.com/v4/latest/USD"
+      );
       if (response.ok) {
         const data = await response.json();
         setExchangeRates(data);
@@ -54,20 +56,23 @@ export default function ManagerDashboard() {
     }
   };
 
-  const convertToINR = useCallback((amount: number, fromCurrency: string): number => {
-    if (!exchangeRates || fromCurrency === "INR") {
-      return amount;
-    }
+  const convertToINR = useCallback(
+    (amount: number, fromCurrency: string): number => {
+      if (!exchangeRates || fromCurrency === "INR") {
+        return amount;
+      }
 
-    const toUSD = amount / exchangeRates.rates[fromCurrency];
-    const toINR = toUSD * exchangeRates.rates["INR"];
+      const toUSD = amount / exchangeRates.rates[fromCurrency];
+      const toINR = toUSD * exchangeRates.rates["INR"];
 
-    return Math.round(toINR * 100) / 100;
-  }, [exchangeRates]);
+      return Math.round(toINR * 100) / 100;
+    },
+    [exchangeRates]
+  );
 
   const fetchApprovalRequests = useCallback(async () => {
     if (fetchingRef.current) return; // Prevent multiple simultaneous requests
-    
+
     fetchingRef.current = true;
     setLoading(true);
     try {
@@ -205,7 +210,8 @@ export default function ManagerDashboard() {
         <div className="mb-8">
           <h1
             className="text-4xl font-bold text-white mb-2"
-            style={{ fontFamily: "cursive" }}>
+            style={{ fontFamily: "cursive" }}
+          >
             Approvals to review
           </h1>
         </div>
@@ -255,7 +261,8 @@ export default function ManagerDashboard() {
                     <tr>
                       <td
                         colSpan={6}
-                        className="px-6 py-12 text-center text-gray-400">
+                        className="px-6 py-12 text-center text-gray-400"
+                      >
                         No approval requests found
                       </td>
                     </tr>
@@ -263,7 +270,8 @@ export default function ManagerDashboard() {
                     filteredRequests.map((request) => (
                       <tr
                         key={request._id}
-                        className="hover:bg-gray-700 transition-colors">
+                        className="hover:bg-gray-700 transition-colors"
+                      >
                         <td className="px-6 py-4 text-white">
                           {request.approvalSubject || "none"}
                         </td>
@@ -277,7 +285,8 @@ export default function ManagerDashboard() {
                           <Badge
                             className={getStatusBadgeColor(
                               request.requestStatus
-                            )}>
+                            )}
+                          >
                             {request.requestStatus.charAt(0).toUpperCase() +
                               request.requestStatus.slice(1)}
                           </Badge>
@@ -307,14 +316,16 @@ export default function ManagerDashboard() {
                             <Button
                               onClick={() => handleApprove(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              className="bg-green-600 hover:bg-green-700 text-white border border-green-500 px-4 py-2 rounded">
+                              className="bg-green-600 hover:bg-green-700 text-white border border-green-500 px-4 py-2 rounded"
+                            >
                               <Check className="h-4 w-4 mr-1" />
                               Approve
                             </Button>
                             <Button
                               onClick={() => handleReject(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              className="bg-red-600 hover:bg-red-700 text-white border border-red-500 px-4 py-2 rounded">
+                              className="bg-red-600 hover:bg-red-700 text-white border border-red-500 px-4 py-2 rounded"
+                            >
                               <X className="h-4 w-4 mr-1" />
                               Reject
                             </Button>

@@ -31,22 +31,31 @@ export async function GET(request: NextRequest) {
       .filter(Boolean);
 
     if (assignedUserIds.length === 0) {
-      const allExpenses = await Expense.find({})
-        .populate("userId", "name email")
-        .sort({ submittedAt: -1 })
-        .limit(10);
+    const allExpenses = await Expense.find({})
+      .populate("userId", "name email")
+      .sort({ submittedAt: -1 })
+      .limit(10);
 
-      const testApprovalRequests = allExpenses.map((expense) => ({
+    console.log("Found expenses:", allExpenses.length);
+    console.log("Sample expense:", allExpenses[0] ? {
+      _id: allExpenses[0]._id,
+      userId: allExpenses[0].userId,
+      expenseType: allExpenses[0].expenseType
+    } : "No expenses found");
+
+    const testApprovalRequests = allExpenses
+      .filter((expense) => expense.userId) // Filter out expenses without userId
+      .map((expense) => ({
         _id: expense._id,
         approvalSubject: expense.expenseType || "Expense",
         requestOwner: {
-          name: expense.userId.name,
-          email: expense.userId.email,
+          name: expense.userId?.name || "Unknown User",
+          email: expense.userId?.email || "unknown@example.com",
         },
         category: expense.expenseType,
         requestStatus: expense.status,
         totalAmount: expense.amount,
-        currency: expense.currency.code || expense.currency,
+        currency: expense.currency?.code || expense.currency,
         description: expense.description,
         createdAt: expense.submittedAt,
       }));
@@ -60,20 +69,22 @@ export async function GET(request: NextRequest) {
       .populate("userId", "name email")
       .sort({ submittedAt: -1 });
 
-    const approvalRequests = expenses.map((expense) => ({
-      _id: expense._id,
-      approvalSubject: expense.expenseType || "Expense",
-      requestOwner: {
-        name: expense.userId.name,
-        email: expense.userId.email,
-      },
-      category: expense.expenseType,
-      requestStatus: expense.status,
-      totalAmount: expense.amount,
-      currency: expense.currency.code || expense.currency,
-      description: expense.description,
-      createdAt: expense.submittedAt,
-    }));
+    const approvalRequests = expenses
+      .filter((expense) => expense.userId) // Filter out expenses without userId
+      .map((expense) => ({
+        _id: expense._id,
+        approvalSubject: expense.expenseType || "Expense",
+        requestOwner: {
+          name: expense.userId?.name || "Unknown User",
+          email: expense.userId?.email || "unknown@example.com",
+        },
+        category: expense.expenseType,
+        requestStatus: expense.status,
+        totalAmount: expense.amount,
+        currency: expense.currency?.code || expense.currency,
+        description: expense.description,
+        createdAt: expense.submittedAt,
+      }));
 
     return NextResponse.json(approvalRequests, { status: 200 });
   } catch (error) {
