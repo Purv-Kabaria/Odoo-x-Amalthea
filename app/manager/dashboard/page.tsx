@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Check, X } from "lucide-react";
+import { Search, Check, X, Home } from "lucide-react";
 import { toast } from "sonner";
 import { getCurrentUserAction } from "@/app/actions/auth";
+import Link from "next/link";
 
 interface ApprovalRequest {
   _id: string;
@@ -55,7 +56,6 @@ export default function ManagerDashboard() {
       const user = await getCurrentUserAction();
       if (user) {
         setCurrentUser(user);
-        console.log("Current user:", user);
       } else {
         toast.error("Please log in to access this page");
         // Redirect to login or handle authentication
@@ -216,29 +216,25 @@ export default function ManagerDashboard() {
       request.requestOwner.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      (request.description && request.description
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()))
+      request.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading || !exchangeRates || !currentUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-slate-200 rounded w-64 mb-6"></div>
-            <div className="h-12 bg-slate-200 rounded w-full mb-6"></div>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-16 bg-slate-100 rounded"></div>
-                ))}
-              </div>
+            <div className="h-8 bg-gray-700 rounded w-64 mb-6"></div>
+            <div className="h-12 bg-gray-700 rounded w-full mb-6"></div>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 bg-gray-700 rounded"></div>
+              ))}
             </div>
           </div>
           {!exchangeRates && (
             <div className="text-center py-8">
-              <div className="text-slate-500">Loading exchange rates...</div>
+              <div className="text-gray-400">Loading exchange rates...</div>
             </div>
           )}
           {!currentUser && (
@@ -252,114 +248,90 @@ export default function ManagerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-semibold text-slate-800 mb-2">
-                Approval Dashboard
-              </h1>
-              <p className="text-slate-600 text-sm">
-                Review and manage expense approval requests
-              </p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-slate-600">Live</span>
-            </div>
+            <h1
+              className="text-4xl font-bold text-white mb-2"
+              style={{ fontFamily: "cursive" }}
+            >
+              Approvals to review
+            </h1>
+            <Link href="/">
+              <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                <Home className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="mb-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
-              placeholder="Search by subject, owner, or description..."
+              placeholder="Search approvals..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white border-slate-200 text-slate-800 placeholder-slate-400 focus:border-blue-500 focus:ring-blue-500 shadow-sm"
+              className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-orange-500 focus:ring-orange-500"
             />
           </div>
         </div>
 
         {/* Approvals Table */}
-        <Card className="bg-white border-slate-200 shadow-lg">
+        <Card className="bg-gray-800 border-gray-700">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-gray-700">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Subject
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Approval Subject
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Owner
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Request Owner
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Description
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Category
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Request Status
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Amount
+                    <th className="px-6 py-4 text-left text-sm font-medium text-white border-b border-gray-600">
+                      Amount (Original & INR)
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-center text-sm font-medium text-white border-b border-gray-600">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-gray-600">
                   {filteredRequests.length === 0 ? (
                     <tr>
                       <td
                         colSpan={6}
-                        className="px-6 py-12 text-center text-slate-500"
+                        className="px-6 py-12 text-center text-gray-400"
                       >
-                        <div className="flex flex-col items-center space-y-2">
-                          <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                            <Search className="h-6 w-6 text-slate-400" />
-                          </div>
-                          <p className="text-slate-500">No approval requests found</p>
-                          <p className="text-slate-400 text-sm">Try adjusting your search criteria</p>
-                        </div>
+                        No approval requests found
                       </td>
                     </tr>
                   ) : (
                     filteredRequests.map((request) => (
                       <tr
                         key={request._id}
-                        className="hover:bg-slate-50 transition-colors"
+                        className="hover:bg-gray-700 transition-colors"
                       >
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-slate-900">
-                            {request.approvalSubject || "N/A"}
-                          </div>
+                        <td className="px-6 py-4 text-white">
+                          {request.approvalSubject || "none"}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-medium text-blue-600">
-                                {request.requestOwner.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-slate-900">
-                                {request.requestOwner.name}
-                              </div>
-                              <div className="text-xs text-slate-500">
-                                {request.requestOwner.email}
-                              </div>
-                            </div>
-                          </div>
+                        <td className="px-6 py-4 text-white">
+                          {request.requestOwner.name}
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-slate-600 max-w-xs truncate" title={request.description}>
-                            {request.description || "No description provided"}
-                          </div>
+                        <td className="px-6 py-4 text-white">
+                          {request.category}
                         </td>
                         <td className="px-6 py-4">
                           <Badge
@@ -371,20 +343,20 @@ export default function ManagerDashboard() {
                               request.requestStatus.slice(1)}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 text-white">
                           <div className="flex flex-col space-y-1">
                             <div className="flex items-center space-x-2">
-                              <span className="text-slate-600 font-medium text-sm">
+                              <span className="text-red-400 font-semibold">
                                 {request.totalAmount} {request.currency}
                               </span>
                             </div>
                             {request.convertedAmount &&
                               request.convertedCurrency && (
                                 <div className="flex items-center space-x-2">
-                                  <span className="text-green-600 font-semibold">
+                                  <span className="text-green-400 font-bold text-lg">
                                     ₹{request.convertedAmount} INR
                                   </span>
-                                  <span className="text-slate-400 text-xs">
+                                  <span className="text-gray-400 text-sm">
                                     (converted)
                                   </span>
                                 </div>
@@ -396,8 +368,7 @@ export default function ManagerDashboard() {
                             <Button
                               onClick={() => handleApprove(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="bg-green-600 hover:bg-green-700 text-white border border-green-500 px-4 py-2 rounded"
                             >
                               <Check className="h-4 w-4 mr-1" />
                               Approve
@@ -405,9 +376,7 @@ export default function ManagerDashboard() {
                             <Button
                               onClick={() => handleReject(request._id)}
                               disabled={request.requestStatus !== "pending"}
-                              size="sm"
-                              variant="destructive"
-                              className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="bg-red-600 hover:bg-red-700 text-white border border-red-500 px-4 py-2 rounded"
                             >
                               <X className="h-4 w-4 mr-1" />
                               Reject
@@ -422,6 +391,16 @@ export default function ManagerDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Bottom Branding */}
+        <div className="mt-8 flex items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[12px] border-b-orange-500"></div>
+            <div className="bg-orange-600 text-white px-3 py-1 rounded text-sm font-medium">
+              Whole Starling
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
