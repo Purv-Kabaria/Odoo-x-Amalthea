@@ -431,7 +431,6 @@ export default function ManagerDashboard() {
             </div>
             <div>
               <div className="text-sm font-medium text-slate-900">Whole Starling</div>
-              <div className="text-xs text-slate-500">Expense Management System</div>
             </div>
           </div>
           <div className="text-xs text-slate-400">

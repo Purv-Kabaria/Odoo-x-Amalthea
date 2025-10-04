@@ -24,6 +24,6 @@ export const NAVBAR = {
   links: [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/upload", label: "Upload Receipts", icon: FileImage },
-    { href: "/admin", label: "Admin Panel", icon: ShieldCheck },
+    { href: "/admin/dashboard", label: "Admin Panel", icon: ShieldCheck },
   ] as NavLink[],
 } as const;
