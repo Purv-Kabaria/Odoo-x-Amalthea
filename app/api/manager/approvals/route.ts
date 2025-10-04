@@ -36,12 +36,6 @@ export async function GET(request: NextRequest) {
       .sort({ submittedAt: -1 })
       .limit(10);
 
-    console.log("Found expenses:", allExpenses.length);
-    console.log("Sample expense:", allExpenses[0] ? {
-      _id: allExpenses[0]._id,
-      userId: allExpenses[0].userId,
-      expenseType: allExpenses[0].expenseType
-    } : "No expenses found");
 
     const testApprovalRequests = allExpenses
       .filter((expense) => expense.userId) // Filter out expenses without userId
