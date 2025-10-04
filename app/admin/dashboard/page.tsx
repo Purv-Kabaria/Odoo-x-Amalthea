@@ -11,13 +11,17 @@ import {
   Shield,
   AlertCircle,
   ArrowRight,
+  ArrowLeft,
   CheckSquare,
+  UserCheck,
+  Crown,
+  UserCog,
+  Activity,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
-  // Check if user is authenticated and has admin role
   const currentUser = await getCurrentUserAction();
 
   if (!currentUser) {
@@ -43,8 +47,7 @@ export default async function AdminDashboard() {
           <CardContent className="text-center">
             <a
               href="/dashboard"
-              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
+              className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
               Go to Dashboard
             </a>
           </CardContent>
@@ -63,105 +66,146 @@ export default async function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-blue-200">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <Shield className="h-6 w-6 text-white" />
+        <div className="bg-card rounded-xl shadow-lg p-4 sm:p-6 border border-border animate-in fade-in-50 slide-in-from-top-4 duration-700">
+          {/* Back Button */}
+          <div className="mb-4">
+            <Link 
+              href="/dashboard"
+              className="inline-flex items-center space-x-2 text-sm text-foreground/70 hover:text-foreground transition-colors duration-200 group"
+            >
+              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform duration-200" />
+              <span>Back to Dashboard</span>
+            </Link>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+            <div className="p-3 bg-primary rounded-xl shadow-md animate-in zoom-in-50 duration-500 delay-200">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-blue-900">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground font-sans animate-in slide-in-from-left-4 duration-700 delay-300">
                 Admin Dashboard
               </h1>
-              <p className="text-blue-600">Manage and monitor user accounts</p>
+              <p className="text-sm sm:text-base text-foreground/70 font-sans animate-in slide-in-from-left-4 duration-700 delay-500">
+                Manage and monitor user accounts across your organization
+              </p>
+            </div>
+            <div className="flex items-center space-x-2 text-sm text-foreground/60 animate-in fade-in-50 duration-700 delay-700">
+              <Activity className="h-4 w-4" />
+              <span>Live Dashboard</span>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 shadow-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="bg-primary text-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all animate-in slide-in-from-bottom-4 duration-700 delay-100 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">
+              <CardTitle className="text-sm font-medium text-primary-foreground/80 font-sans">
                 Total Users
               </CardTitle>
-              <Users className="h-4 w-4 text-blue-200" />
+              <div className="p-2 bg-primary-foreground/20 rounded-lg group-hover:bg-primary-foreground/30 transition-colors duration-300">
+                <Users className="h-4 w-4 text-primary-foreground/80" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.total}</div>
-              <p className="text-xs text-blue-200">All registered users</p>
+              <div className="text-2xl sm:text-3xl font-bold font-sans animate-in zoom-in-50 duration-500 delay-300">
+                {userStats.total}
+              </div>
+              <p className="text-xs text-primary-foreground/60 font-sans">
+                All registered users
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-red-500 to-red-600 text-white border-0 shadow-lg">
+          <Card className="bg-destructive text-destructive-foreground border-0 shadow-lg hover:shadow-xl transition-all animate-in slide-in-from-bottom-4 duration-700 delay-200 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-red-100">
+              <CardTitle className="text-sm font-medium text-destructive-foreground/80 font-sans">
                 Administrators
               </CardTitle>
-              <Shield className="h-4 w-4 text-red-200" />
+              <div className="p-2 bg-destructive-foreground/20 rounded-lg group-hover:bg-destructive-foreground/30 transition-colors duration-300">
+                <Crown className="h-4 w-4 text-destructive-foreground/80" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.admins}</div>
-              <p className="text-xs text-red-200">Full access users</p>
+              <div className="text-2xl sm:text-3xl font-bold font-sans animate-in zoom-in-50 duration-500 delay-400">
+                {userStats.admins}
+              </div>
+              <p className="text-xs text-destructive-foreground/60 font-sans">
+                Full access users
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0 shadow-lg">
+          <Card className="bg-gradient-to-br from-amber-500 to-orange-500 text-white border-0 shadow-lg hover:shadow-xl transition-all animate-in slide-in-from-bottom-4 duration-700 delay-300 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-100">
-                Moderators
+              <CardTitle className="text-sm font-medium text-white/90 font-sans">
+                Managers
               </CardTitle>
-              <Shield className="h-4 w-4 text-yellow-200" />
+              <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors duration-300">
+                <UserCog className="h-4 w-4 text-white/90" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.managers}</div>
-              <p className="text-xs text-yellow-200">Management level access</p>
+              <div className="text-2xl sm:text-3xl font-bold font-sans animate-in zoom-in-50 duration-500 delay-500">
+                {userStats.managers}
+              </div>
+              <p className="text-xs text-white/70 font-sans">
+                Management level access
+              </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0 shadow-lg">
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-lg hover:shadow-xl transition-all animate-in slide-in-from-bottom-4 duration-700 delay-400 group">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-green-100">
+              <CardTitle className="text-sm font-medium text-white/90 font-sans">
                 Employees
               </CardTitle>
-              <Users className="h-4 w-4 text-green-200" />
+              <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors duration-300">
+                <UserCheck className="h-4 w-4 text-white/90" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userStats.employees}</div>
-              <p className="text-xs text-green-200">Basic users</p>
+              <div className="text-2xl sm:text-3xl font-bold font-sans animate-in zoom-in-50 duration-500 delay-600">
+                {userStats.employees}
+              </div>
+              <p className="text-xs text-white/70 font-sans">
+                Basic users
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <Link href="/admin/users">
-            <Card className="bg-white shadow-lg border border-blue-200 hover:shadow-xl transition-all duration-200 cursor-pointer group hover:border-blue-300">
+            <Card className="bg-card shadow-lg border border-border hover:shadow-xl transition-all cursor-pointer group hover:border-primary/50 hover:-translate-y-1 animate-in slide-in-from-left-4 duration-700 delay-500">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="p-3 bg-blue-500 rounded-lg group-hover:bg-blue-600 transition-colors">
-                    <Users className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-primary rounded-xl group-hover:bg-primary/90 group-hover:scale-110 transition-all duration-300 shadow-md">
+                    <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
                   </div>
-                  <ArrowRight className="h-5 w-5 text-blue-500 group-hover:text-blue-600 transition-colors" />
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary/80 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
-                <CardTitle className="text-lg font-bold text-blue-900 group-hover:text-blue-800 transition-colors">
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors font-sans">
                   User Management
                 </CardTitle>
-                <CardDescription className="text-blue-600">
+                <CardDescription className="text-sm text-foreground/70 font-sans">
                   View and manage all user accounts, roles, and permissions
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-foreground/70 font-sans">
                     Total Users:{" "}
-                    <span className="font-semibold text-blue-600">
+                    <span className="font-semibold text-primary">
                       {userStats.total}
                     </span>
                   </div>
-                  <div className="text-xs text-blue-500 font-medium">
+                  <div className="text-xs text-primary font-medium font-sans">
                     Manage →
                   </div>
                 </div>
@@ -170,73 +214,34 @@ export default async function AdminDashboard() {
           </Link>
 
           <Link href="/admin/approvals">
-            <Card className="bg-white shadow-lg border border-green-200 hover:shadow-xl transition-all duration-200 cursor-pointer group hover:border-green-300">
+            <Card className="bg-card shadow-lg border border-border hover:shadow-xl transition-all cursor-pointer group hover:border-primary/50 hover:-translate-y-1 animate-in slide-in-from-left-4 duration-700 delay-600">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <div className="p-3 bg-green-500 rounded-lg group-hover:bg-green-600 transition-colors">
-                    <CheckSquare className="h-6 w-6 text-white" />
+                  <div className="p-3 bg-primary rounded-xl group-hover:bg-primary/90 group-hover:scale-110 transition-all duration-300 shadow-md">
+                    <CheckSquare className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
                   </div>
-                  <ArrowRight className="h-5 w-5 text-green-500 group-hover:text-green-600 transition-colors" />
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 text-primary group-hover:text-primary/80 group-hover:translate-x-1 transition-all duration-300" />
                 </div>
-                <CardTitle className="text-lg font-bold text-green-900 group-hover:text-green-800 transition-colors">
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground group-hover:text-primary transition-colors font-sans">
                   Approval Rules
                 </CardTitle>
-                <CardDescription className="text-green-600">
+                <CardDescription className="text-sm text-foreground/70 font-sans">
                   Manage approval workflows and expense approval rules
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-foreground/70 font-sans">
                     Rules:{" "}
-                    <span className="font-semibold text-green-600">Active</span>
+                    <span className="font-semibold text-primary">Active</span>
                   </div>
-                  <div className="text-xs text-green-500 font-medium">
+                  <div className="text-xs text-primary font-medium font-sans">
                     Manage →
                   </div>
                 </div>
               </CardContent>
             </Card>
           </Link>
-
-          {/* Placeholder for future admin features */}
-          <Card className="bg-white shadow-lg border border-gray-200 opacity-60">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 bg-gray-400 rounded-lg">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <CardTitle className="text-lg font-bold text-gray-600">
-                System Settings
-              </CardTitle>
-              <CardDescription className="text-gray-500">
-                Configure system-wide settings and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-sm text-gray-500">Coming Soon</div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white shadow-lg border border-gray-200 opacity-60">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-3 bg-gray-400 rounded-lg">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <CardTitle className="text-lg font-bold text-gray-600">
-                Reports & Analytics
-              </CardTitle>
-              <CardDescription className="text-gray-500">
-                View system reports and user activity analytics
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="text-sm text-gray-500">Coming Soon</div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>

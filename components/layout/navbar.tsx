@@ -141,7 +141,7 @@ export function Navbar() {
                     variant="outline"
                     className={`transition-all duration-300 shadow-sm rounded-md border-2 ${
                       scrolled
-                        ? "border-primary-foreground/20 text-primary-foreground hover:border-primary-foreground/40 hover:bg-primary-foreground/10"
+                        ? "border-primary-foreground/20 text-foreground hover:border-primary-foreground/40 hover:bg-primary-foreground/10"
                         : "border-primary/20 text-primary hover:border-primary/40 hover:bg-primary/5"
                     }`}>
                     <User className="h-4 w-4 mr-2" />
@@ -247,7 +247,7 @@ export function Navbar() {
                         <div className="mt-6 space-y-3">
                           <div className="p-3 bg-gray-50 rounded-lg border">
                             <p className="font-medium text-sm">{user.email.split('@')[0]}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                            <p className="text-xs text-black-500 truncate">{user.email}</p>
                           </div>
                           <Button
                             asChild
