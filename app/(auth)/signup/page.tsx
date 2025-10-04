@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signUpAction } from "@/app/actions/auth";
 import { motion } from "framer-motion";
@@ -8,12 +8,30 @@ import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", organization: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", organization: "", country: "" });
+  const [countries, setCountries] = useState<Array<{name: string, official: string, currencies: string[]}>>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch('/api/countries');
+        if (response.ok) {
+          const data = await response.json();
+          setCountries(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch countries:', error);
+      }
+    };
+    
+    fetchCountries();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,6 +55,7 @@ export default function SignupPage() {
         email: form.email,
         password: form.password,
         organization: form.organization,
+        country: form.country,
       });
 
       // Redirect based on user role
@@ -130,7 +149,25 @@ export default function SignupPage() {
                   required
                 />
               </div>
-
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700">
+                  Country
+                </label>
+                <Select value={form.country} onValueChange={(value) => setForm({ ...form, country: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.name} value={country.name}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Creating..." : "Create account"}
               </Button>

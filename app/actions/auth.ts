@@ -12,6 +12,7 @@ type SignupInput = {
   email: string;
   password: string;
   organization: string;
+  country: string;
   role?: "admin" | "employee" | "manager";
 };
 
@@ -23,8 +24,8 @@ type LoginInput = {
 export async function signUpAction(data: SignupInput) {
   await connectToDatabase();
 
-  const { name, email, password, organization, role } = data;
-  if (!name || !email || !password || !organization) {
+  const { name, email, password, organization, country, role } = data;
+  if (!name || !email || !password || !organization || !country) {
     throw new Error("Missing required fields");
   }
 
@@ -49,6 +50,7 @@ export async function signUpAction(data: SignupInput) {
     email, 
     password: hashed, 
     organization,
+    country,
     role: role || userRole 
   };
   
@@ -86,6 +88,7 @@ export async function signUpAction(data: SignupInput) {
     email: user.email,
     role: user.role,
     organization: user.organization,
+    country: user.country,
   };
 }
 
