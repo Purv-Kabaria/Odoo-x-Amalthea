@@ -21,59 +21,57 @@ export type FeatureItem = {
 export const FEATURES_CONTENT = {
   id: "features",
   eyebrow: "Features",
-  title: "A Complete Toolkit for Placeholder",
+  title: "A Complete Toolkit for Modern Expense Management",
   description:
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
+    "Discover how Expensio's powerful features can simplify expense reporting for your entire organization, from submission to reimbursement.",
   items: [
     {
       icon: CalendarClock,
-      title: "Placeholder",
+      title: "Automated Approval Flows",
       description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
-    },
-    {
-      icon: BellRing,
-      title: "Placeholder",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
-    },
-    {
-      icon: LineChart,
-      title: "Placeholder",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
-    },
-    {
-      icon: BarChart,
-      title: "Placeholder",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
-    },
-    {
-      icon: MessageSquareHeart,
-      title: "Placeholder",
-      description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
+        "Create multi-step approval chains that automatically route expenses to the right managers, departments, or finance teams. No more chasing signatures.",
     },
     {
       icon: FileText,
-      title: "Placeholder",
+      title: "OCR Receipt Scanning",
       description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
+        "Eliminate manual data entry. Just snap a photo of a receipt, and our OCR technology will automatically extract the vendor, date, amount, and more.",
+    },
+    {
+      icon: LineChart,
+      title: "Insightful Analytics & Reporting",
+      description:
+        "Gain a clear view of company spending with powerful dashboards. Track expenses by category, department, or employee to make smarter budget decisions.",
+    },
+    {
+      icon: BarChart,
+      title: "Customizable Expense Policies",
+      description:
+        "Define your company's spending rules and thresholds. Expensio automatically flags out-of-policy expenses for review, ensuring compliance.",
+    },
+    {
+      icon: MessageSquareHeart,
+      title: "Clear Communication",
+      description:
+        "Managers can approve, reject, or add comments directly to expense submissions, providing clear feedback to employees and reducing back-and-forth emails.",
+    },
+    {
+      icon: BellRing,
+      title: "Real-time Notifications",
+      description:
+        "Stay informed with instant notifications for expense submissions, approvals, and rejections. Keep the process moving without delay.",
     },
     {
       icon: ShieldCheck,
-      title: "Placeholder",
+      title: "Secure & Compliant",
       description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
+        "Your financial data is safe with us. We ensure top-tier security and help you maintain a clear, compliant audit trail for all expenses.",
     },
     {
       icon: Users,
-      title: "Placeholder",
+      title: "User & Role Management",
       description:
-        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Temporibus, officiis!",
+        "Easily manage your team with distinct roles for Employees, Managers, and Admins. Define manager-employee relationships for a seamless approval hierarchy.",
     },
   ] as FeatureItem[],
 } as const;
-
-

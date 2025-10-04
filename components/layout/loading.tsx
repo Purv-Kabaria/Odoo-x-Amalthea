@@ -22,7 +22,7 @@ export function Loading() {
         className="flex flex-col items-center">
         <div className="relative h-16 w-16 mb-4">
           <Image
-            src="/images/logo.png"
+            src="/images/logo-blue.svg"
             alt="Placeholder Logo"
             fill
             className="object-contain"

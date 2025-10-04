@@ -114,7 +114,7 @@ export function Navbar() {
             <div className="font-bold text-xl font-serif">
               <span
                 className={
-                  scrolled ? "text-primary-foreground" : "text-muted-foreground"
+                  scrolled ? "text-primary-foreground" : "text-primary"
                 }>
                 {NAVBAR.name.primary}
               </span>

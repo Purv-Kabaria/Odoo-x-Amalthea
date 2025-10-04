@@ -49,11 +49,10 @@ export interface FooterConfig {
 
 export const footerConfig: FooterConfig = {
   companyName: {
-    primary: "Place",
-    secondary: "Holder",
+    primary: "Expen",
+    secondary: "sio",
   },
-  tagline:
-    "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+  tagline: "Automating expense management, from submission to reimbursement.",
   socialLinks: [
     {
       href: "https://facebook.com",
@@ -78,25 +77,36 @@ export const footerConfig: FooterConfig = {
   ],
   sections: [
     {
-      title: "Placeholder1",
-      links: [{ href: "/placeholder1", label: "Placeholder1" }],
+      title: "Product",
+      links: [
+        { href: "/#features", label: "Features" },
+        { href: "/pricing", label: "Pricing" },
+        { href: "/demo", label: "Book a Demo" },
+      ],
     },
     {
-      title: "Placeholder2",
-      links: [{ href: "/placeholder2", label: "Placeholder2" }],
+      title: "Company",
+      links: [
+        { href: "/about", label: "About Us" },
+        { href: "/contact", label: "Contact" },
+        { href: "/careers", label: "Careers" },
+      ],
     },
   ],
   contactInfo: {
     address: {
-      line1: "SVNIT",
-      line2: "Surat, Gujarat, India",
+      line1: "123 Finance Ave",
+      line2: "Business City, 12345",
       line3: "",
     },
-    email: "contact@placeholder.com",
-    phone: "+91 12345 67890",
+    email: "contact@expensio.com",
+    phone: "+1 (555) 123-4567",
   },
   legal: {
-    copyrightText: "Placeholder. All rights reserved.",
-    links: [],
+    copyrightText: "Expensio. All rights reserved.",
+    links: [
+      { href: "/privacy", label: "Privacy Policy" },
+      { href: "/terms", label: "Terms of Service" },
+    ],
   },
 };

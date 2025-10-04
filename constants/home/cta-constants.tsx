@@ -50,62 +50,63 @@ export interface CTAConfig {
 
 export const ctaConfig: CTAConfig = {
   badge: {
-    text: "Placeholder",
+    text: "Smart Expense Management",
   },
   heading: {
-    title: "Placeholder",
+    title: "Streamline Your Company's Expenses with Expensio",
     subtitle:
-      "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+      "Say goodbye to manual spreadsheets and lost receipts. Expensio automates your entire expense reporting and approval process.",
   },
   features: [
     {
       icon: CalendarCheck,
-      title: "Placeholder",
-      description: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+      title: "Flexible Approval Workflows",
+      description:
+        "Define multi-level approval chains, set rules based on thresholds, and ensure every expense is reviewed by the right people.",
     },
     {
       icon: HeartPulse,
-      title: "Placeholder",
+      title: "Real-time Expense Tracking",
       description:
-        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+        "Empower your team to submit expenses on the go and gain full transparency into company spending as it happens.",
     },
   ],
   buttons: [
     {
-      text: "Placeholder",
+      text: "Get Started for Free",
       href: "/signup",
       variant: "primary",
     },
     {
-      text: "Placeholder",
-      href: "/tour",
+      text: "Request a Demo",
+      href: "/demo",
       variant: "secondary",
     },
   ],
   dashboard: {
-    title: "Placeholder",
-    patientName: "Placeholder",
+    title: "Your Expense Dashboard",
+    patientName: "Welcome, Alex (Admin)",
     items: [
       {
         icon: CalendarCheck,
-        title: "Placeholder",
-        time: "Placeholder",
+        title: "New Expense Report from Sarah",
+        time: "2 hours ago",
         content:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+          "Team lunch for the Q3 project kickoff. Awaiting your approval.",
       },
       {
         icon: BarChart,
-        title: "Placeholder",
-        time: "Placeholder",
+        title: "Marketing Dept. Spending Report",
+        time: "Yesterday",
         content:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+          "The monthly spending report for the Marketing department is ready for review.",
       },
       {
         icon: Bell,
-        title: "Placeholder",
-        time: "Placeholder",
+        title: "Policy Reminder: Travel Expenses",
+        time: "3 days ago",
         content:
-          "Lorem ipsum dolor sit amet consectetur adipisicing elit. Cum, quos?",
+          "A reminder that all international travel expenses require pre-approval from the Finance department.",
       },
     ],
   },
