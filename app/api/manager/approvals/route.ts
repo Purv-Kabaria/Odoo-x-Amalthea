@@ -4,7 +4,7 @@ import connectToDatabase from "@/lib/mongoose";
 import User from "@/models/User";
 import { Expense } from "@/models/expense";
 import ApprovalRule from "@/models/ApprovalRules";
-
+  
 export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();

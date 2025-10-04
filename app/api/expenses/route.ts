@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/mongoose";
-import { Expense } from "@/models/Expense";
+import { Expense } from "@/models/expense";
 import { verifyToken } from "@/lib/jwt";
 import { cookies } from "next/headers";
-import User from "@/models/User";
 import { fetchCurrencies, isValidCurrencyCode } from "@/lib/currencyUtils";
 
 interface ExpenseQuery {
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
     console.log("Starting expense creation process");
     
     // Get JWT token from cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
     
     if (!token) {
@@ -204,7 +203,8 @@ export async function POST(req: NextRequest) {
         );
       }
 
-    } catch (tokenError) {
+    } catch  {
+      console.error("Token verification error: Invalid authentication token");
       return NextResponse.json(
         { error: "Invalid authentication token" },
         { status: 401 }

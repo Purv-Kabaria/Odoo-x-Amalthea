@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrentUserAction } from "@/app/actions/auth";
 
 interface ApprovalRequest {
   _id: string;
@@ -14,6 +15,7 @@ interface ApprovalRequest {
   requestOwner: {
     name: string;
     email: string;
+    organization?: string;
   };
   category: string;
   requestStatus: "pending" | "approved" | "rejected";
@@ -40,7 +42,29 @@ export default function ManagerDashboard() {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(
     null
   );
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    role: string;
+    email: string;
+    organization: string;
+  } | null>(null);
   const fetchingRef = useRef(false);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const user = await getCurrentUserAction();
+      if (user) {
+        setCurrentUser(user);
+        console.log("Current user:", user);
+      } else {
+        toast.error("Please log in to access this page");
+        // Redirect to login or handle authentication
+      }
+    } catch (error) {
+      console.error("Failed to get current user:", error);
+      toast.error("Authentication error. Please log in again.");
+    }
+  };
 
   const fetchExchangeRates = async () => {
     try {
@@ -71,12 +95,14 @@ export default function ManagerDashboard() {
   );
 
   const fetchApprovalRequests = useCallback(async () => {
-    if (fetchingRef.current) return; // Prevent multiple simultaneous requests
+    if (fetchingRef.current || !currentUser) return; // Prevent multiple simultaneous requests and ensure user is loaded
 
     fetchingRef.current = true;
     setLoading(true);
     try {
-      const response = await fetch("/api/manager/approvals");
+      const response = await fetch(
+        `/api/manager/approvals?managerId=${currentUser.id}`
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -102,22 +128,28 @@ export default function ManagerDashboard() {
       setLoading(false);
       fetchingRef.current = false;
     }
-  }, [convertToINR]);
+  }, [convertToINR, currentUser]);
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchExchangeRates();
   }, []);
 
   useEffect(() => {
-    if (exchangeRates) {
+    if (exchangeRates && currentUser) {
       fetchApprovalRequests();
     }
-  }, [exchangeRates, fetchApprovalRequests]);
+  }, [exchangeRates, currentUser, fetchApprovalRequests]);
 
   const handleApprove = async (requestId: string) => {
+    if (!currentUser) {
+      toast.error("Please log in to approve requests");
+      return;
+    }
+
     try {
       const response = await fetch(
-        `/api/manager/approvals/${requestId}/approve`,
+        `/api/manager/approvals/${requestId}/approve?managerId=${currentUser.id}`,
         {
           method: "POST",
         }
@@ -127,7 +159,8 @@ export default function ManagerDashboard() {
         toast.success("Request approved successfully");
         fetchApprovalRequests();
       } else {
-        toast.error("Failed to approve request");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to approve request");
       }
     } catch (error) {
       console.error("Error approving request:", error);
@@ -136,9 +169,14 @@ export default function ManagerDashboard() {
   };
 
   const handleReject = async (requestId: string) => {
+    if (!currentUser) {
+      toast.error("Please log in to reject requests");
+      return;
+    }
+
     try {
       const response = await fetch(
-        `/api/manager/approvals/${requestId}/reject`,
+        `/api/manager/approvals/${requestId}/reject?managerId=${currentUser.id}`,
         {
           method: "POST",
         }
@@ -148,7 +186,8 @@ export default function ManagerDashboard() {
         toast.success("Request rejected successfully");
         fetchApprovalRequests();
       } else {
-        toast.error("Failed to reject request");
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to reject request");
       }
     } catch (error) {
       console.error("Error rejecting request:", error);
@@ -180,7 +219,7 @@ export default function ManagerDashboard() {
       request.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading || !exchangeRates) {
+  if (loading || !exchangeRates || !currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-6">
         <div className="max-w-7xl mx-auto">
@@ -196,6 +235,11 @@ export default function ManagerDashboard() {
           {!exchangeRates && (
             <div className="text-center py-8">
               <div className="text-gray-400">Loading exchange rates...</div>
+            </div>
+          )}
+          {!currentUser && (
+            <div className="text-center py-8">
+              <div className="text-gray-400">Loading user information...</div>
             </div>
           )}
         </div>
